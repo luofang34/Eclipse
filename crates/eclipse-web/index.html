@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Eclipse Maps</title>
+  <link data-trunk rel="rust" data-bin="eclipse-web" data-wasm-opt="z" data-cargo-profile="web">
+  <style>
+    html, body { margin: 0; height: 100%; overflow: hidden; background: #ffffff; }
+    canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+    #status { position: absolute; inset: 0; display: grid; place-items: center; font: 15px system-ui, sans-serif; color: #333; }
+  </style>
+</head>
+<body>
+  <div id="status">Loading eclipse maps…</div>
+  <canvas id="eclipse"></canvas>
+</body>
+</html>

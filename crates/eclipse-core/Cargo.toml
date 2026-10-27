@@ -1,0 +1,15 @@
+[package]
+name = "eclipse-core"
+description = "Solar and lunar eclipse circumstances and maps from Navigate's Sun and Moon"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+navigate-celestial.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true
