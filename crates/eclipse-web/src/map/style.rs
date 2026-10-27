@@ -1,5 +1,5 @@
-//! The basemap style: a white globe with coastlines and borders, as the NASA eclipse maps
-//! draw it, from Natural Earth's 1:50m data.
+//! The basemap style: a white globe with pale land, coastlines and borders, from Natural
+//! Earth's 1:50m data.
 
 use serde_json::{Value, json};
 
@@ -21,6 +21,8 @@ pub(super) fn basemap() -> Result<Value, serde_json::Error> {
         },
         "layers": [
             {"id": "ocean", "type": "background", "paint": {"background-color": "#ffffff"}},
+            {"id": "land", "type": "fill", "source": "land",
+             "paint": {"fill-color": "#f4f1ea"}},
             {"id": "coast", "type": "line", "source": "land",
              "paint": {"line-color": "#202020", "line-width": 0.8}},
             {"id": "borders", "type": "line", "source": "borders",
