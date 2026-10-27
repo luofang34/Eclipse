@@ -1364,7 +1364,7 @@ version = "0.7.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "777d18aa0f12f8b285331cd867133ee14422b3f023f6d388034c47d43e28786a"
 dependencies = [
- "approx 0.5.1",
+ "approx 0.4.0",
  "num-traits",
  "rstar 0.10.0",
  "rstar 0.11.0",
@@ -1750,12 +1750,6 @@ name = "heck"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95505c38b4572b2d910cecb0281560f54b440a19336cbbcb27bf6ce6adc6f5a8"
-
-[[package]]
-name = "heck"
-version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
 name = "hermit-abi"
@@ -2834,7 +2828,7 @@ dependencies = [
 [[package]]
 name = "navigate-celestial"
 version = "0.1.0"
-source = "git+https://github.com/luofang34/Navigate?rev=b4b045886c9a0db376d9e3727eef4c22d28b9821#b4b045886c9a0db376d9e3727eef4c22d28b9821"
+source = "git+https://github.com/luofang34/Navigate?rev=e652df2e9459095c2a98142ba4674607400e1dd9#e652df2e9459095c2a98142ba4674607400e1dd9"
 dependencies = [
  "hifitime",
  "nalgebra",
@@ -3632,7 +3626,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "119533552c9a7ffacc21e099c24a0ac8bb19c2a2a3f363de84cd9b844feab270"
 dependencies = [
  "bytes",
- "heck 0.4.1",
+ "heck",
  "itertools 0.10.5",
  "lazy_static",
  "log",
@@ -3653,7 +3647,7 @@ version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be769465445e8c1474e9c5dac2018218498557af32d9ed057325ec9a41ae81bf"
 dependencies = [
- "heck 0.5.0",
+ "heck",
  "itertools 0.14.0",
  "log",
  "multimap 0.10.1",
@@ -4592,7 +4586,7 @@ version = "0.9.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "287f59010008f0d7cf5e3b03196d666c1acc46c8d3e9cf34c28a1a7157601e72"
 dependencies = [
- "heck 0.5.0",
+ "heck",
  "proc-macro2",
  "quote",
  "syn 2.0.119",

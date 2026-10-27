@@ -5,9 +5,9 @@
 //! the samples are five minutes apart, and four-point Lagrange interpolation then agrees
 //! with Navigate to a few metres, Earth's rotation of the axes included.
 
-use navigate_celestial::{moon_ecef, sun_ecef};
+use navigate_celestial::{moon_ecef_tt, sun_ecef_tt};
 
-use crate::{EclipseError, time::civil_epoch};
+use crate::{EclipseError, time::tt_epoch};
 
 /// The WGS84 equatorial radius in metres, the unit of every position.
 pub const EARTH_RADIUS_M: f64 = 6_378_137.0;
@@ -88,13 +88,13 @@ impl Track {
 
 /// Sun and Moon at `jd_tt` straight from Navigate.
 pub fn bodies(jd_tt: f64) -> Result<Bodies, EclipseError> {
-    let epoch = civil_epoch(jd_tt);
-    let sun = sun_ecef(epoch, None).map_err(|source| EclipseError::Ephemeris {
+    let epoch = tt_epoch(jd_tt);
+    let sun = sun_ecef_tt(epoch, None).map_err(|source| EclipseError::Ephemeris {
         body: "Sun",
         jd_tt,
         source,
     })?;
-    let moon = moon_ecef(epoch, None).map_err(|source| EclipseError::Ephemeris {
+    let moon = moon_ecef_tt(epoch, None).map_err(|source| EclipseError::Ephemeris {
         body: "Moon",
         jd_tt,
         source,

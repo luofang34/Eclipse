@@ -6,7 +6,7 @@ use navigate_celestial::{AnalyticError, ObservationError};
 #[derive(Debug, thiserror::Error)]
 pub enum EclipseError {
     /// Navigate could not give the Sun or Moon at an instant, usually because it lies
-    /// outside its 1850 to 2100 range.
+    /// outside its 1800 to 2200 range.
     #[error("no {body} position at JD {jd_tt:.5} TT")]
     Ephemeris {
         /// "Sun" or "Moon".

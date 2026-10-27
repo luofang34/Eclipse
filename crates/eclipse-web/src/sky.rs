@@ -3,7 +3,11 @@
 //! Moon seen from the place itself rather than the Earth's centre.
 
 use cgmath::{InnerSpace, Matrix, Matrix3, Quaternion, Rotation, Vector3};
-use eclipse_core::{EARTH_RADIUS_M, geodesy::LatLon, geodesy::surface, time::civil_epoch};
+use eclipse_core::{
+    EARTH_RADIUS_M,
+    geodesy::{LatLon, surface},
+    time::{civil_epoch, tt_epoch},
+};
 use maplibre::{
     celestial::ecef_to_globe_world, projection::globe::EARTH_RADIUS_METERS,
     render::view_state::GlobePose,
@@ -148,7 +152,7 @@ impl SkyView {
 
     /// The Sun, the Moon and, when they moved, the stars at `jd_tt` from the site.
     pub(crate) fn sky(&mut self, jd_tt: f64) -> SkyFrame {
-        let epoch = civil_epoch(jd_tt);
+        let epoch = tt_epoch(jd_tt);
         let eye = surface(self.site).map(|c| c * EARTH_RADIUS_M);
         let sight = |s: navigate_celestial::EarthFixedSight| {
             (s.direction, s.angular_radius_rad.to_degrees())
@@ -158,7 +162,7 @@ impl SkyView {
             .is_none_or(|at| (jd_tt - at).abs() >= STAR_REFRESH_DAYS);
         let stars = stale.then(|| {
             self.stars_at = Some(jd_tt);
-            navigate_celestial::stars_ecef(epoch, FAINTEST_MAGNITUDE)
+            navigate_celestial::stars_ecef(civil_epoch(jd_tt), FAINTEST_MAGNITUDE)
                 .map(|stars| {
                     stars
                         .into_iter()
@@ -168,10 +172,10 @@ impl SkyView {
                 .unwrap_or_default()
         });
         SkyFrame {
-            sun: navigate_celestial::sun_ecef(epoch, Some(eye))
+            sun: navigate_celestial::sun_ecef_tt(epoch, Some(eye))
                 .ok()
                 .map(sight),
-            moon: navigate_celestial::moon_ecef(epoch, Some(eye))
+            moon: navigate_celestial::moon_ecef_tt(epoch, Some(eye))
                 .ok()
                 .map(sight),
             stars,

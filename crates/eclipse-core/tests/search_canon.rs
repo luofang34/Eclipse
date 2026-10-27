@@ -1,4 +1,4 @@
-//! Searching every year from 1850 to 2099 finds exactly the eclipses the NASA Five
+//! Searching every year from 1800 to 2199 finds exactly the eclipses the NASA Five
 //! Millennium Canon lists, with the same types.
 
 use std::collections::BTreeSet;
@@ -18,7 +18,7 @@ fn every_year_finds_the_catalogued_eclipses() {
         }
     }
     let mut found = BTreeSet::new();
-    for year in 1850..=2099 {
+    for year in 1800..=2199 {
         for e in eclipses_in_year(year).unwrap() {
             let (body, code) = match &e {
                 Eclipse::Solar(s) => ("solar", s.kind.code()),

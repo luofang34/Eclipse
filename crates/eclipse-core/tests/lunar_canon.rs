@@ -1,4 +1,4 @@
-//! Every lunar eclipse of NASA's Five Millennium Canon from 1850 to 2099 against what
+//! Every lunar eclipse of NASA's Five Millennium Canon from 1800 to 2199 against what
 //! eclipse-core computes.
 
 use eclipse_core::{LunarEclipse, time::CalendarTime};

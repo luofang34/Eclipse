@@ -1,6 +1,6 @@
 # Eclipse Maps
 
-Solar and lunar eclipse maps in the browser, for every eclipse from 1850 to 2099, after the
+Solar and lunar eclipse maps in the browser, for every eclipse from 1800 to 2199, after the
 maps of NASA's *Five Millennium Canons* (Espenak and Meeus). A solar eclipse shows its
 penumbral limits, where it begins, ends and is greatest at sunrise and sunset, the curves of
 magnitude 0.5, the path of totality or annularity, the shadow and the night side at any
@@ -42,7 +42,7 @@ change the field of view.
     RUSTDOCFLAGS="-D missing_docs -D broken_intra_doc_links" cargo doc -p eclipse-core -p eclipse-svg --no-deps
     scripts/check-structure.sh
 
-The tests compare every eclipse of the Canons from 1850 to 2099, two published paths, and
+The tests compare every eclipse of the Canons from 1800 to 2199, two published paths, and
 totality as the expeditions recorded it at Königsberg in 1851 and at Sobral and Príncipe in
 1919.
 Their fixtures come from NASA's pages through `tools/canon_fixture.py`; the basemap's

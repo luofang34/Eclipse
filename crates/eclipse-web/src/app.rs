@@ -162,7 +162,7 @@ impl EclipseApp {
     fn side_panel(&mut self, ui: &mut egui::Ui) {
         ui.add_space(6.0);
         ui.label(egui::RichText::new("Eclipse Maps").heading().strong());
-        ui.label("Solar and lunar eclipses, 1850–2099");
+        ui.label("Solar and lunar eclipses, 1800–2199");
         ui.separator();
         if let Some(action) = panel::year_list(ui, self.year, &self.list, self.index) {
             match action {

@@ -29,7 +29,7 @@ fn the_eclipses_of_2026() {
 
 #[test]
 fn the_ends_of_the_range() {
-    // Navigate covers 1850 to 2100: the year's eclipses inside it are still found.
-    assert!(!eclipses_in_year(1850).unwrap().is_empty());
-    assert!(!eclipses_in_year(2099).unwrap().is_empty());
+    // Navigate covers 1800 to 2200: the year's eclipses inside it are still found.
+    assert!(!eclipses_in_year(1800).unwrap().is_empty());
+    assert!(!eclipses_in_year(2199).unwrap().is_empty());
 }

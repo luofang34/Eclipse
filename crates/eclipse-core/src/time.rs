@@ -1,7 +1,7 @@
 //! Time: eclipses are computed in TT, as Julian days, and shown in TT and UT.
 //!
-//! Navigate takes a civil clock reading: UT1 before 1972 and UTC from 1972. [`civil_epoch`]
-//! turns a TT instant into the reading Navigate maps back onto it.
+//! Navigate's Sun and Moon take the TT instant itself. Its star catalogue takes a civil
+//! clock reading, UT1 before 1972 and UTC from 1972, which [`civil_epoch`] gives.
 
 use navigate_celestial::{DeltaT, Epoch, TimeScale, delta_t};
 

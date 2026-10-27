@@ -15,7 +15,7 @@ use crate::{
 };
 
 /// The years Navigate's Sun and Moon cover.
-pub(crate) const YEARS: std::ops::RangeInclusive<i32> = 1850..=2099;
+pub(crate) const YEARS: std::ops::RangeInclusive<i32> = 1800..=2199;
 
 /// What the viewer asked for in the panel.
 pub(crate) enum Action {

@@ -4,12 +4,12 @@ Usage:
     python3 -I tools/canon_fixture.py CAT_DIR crates/eclipse-core/tests/fixtures \
         2026_08_12=SE2026Aug12Tpath.html 2026_02_17=SE2026Feb17Apath.html
 
-CAT_DIR holds the Five Millennium Canon catalogue pages SE1801-1900.html,
-SE1901-2000.html, SE2001-2100.html, LE1801-1900.html, LE1901-2000.html and
-LE2001-2100.html from https://eclipse.gsfc.nasa.gov/SEcat5/ and /LEcat5/.
+CAT_DIR holds the Five Millennium Canon catalogue pages SE1701-1800.html to
+SE2101-2200.html and LE1701-1800.html to LE2101-2200.html from
+https://eclipse.gsfc.nasa.gov/SEcat5/ and /LEcat5/.
 Each NAME=PATH_HTML is a path table from https://eclipse.gsfc.nasa.gov/SEpath/SEpath2001/,
 written to path_NAME.csv; a limit the table leaves out ("-") is left empty.
-Rows from 1850 to 2099 are kept: Navigate's Sun and Moon end at 2100 January 1.
+Rows from 1800 to 2199 are kept: Navigate's Sun and Moon cover 1800 to 2200.
 """
 import csv
 import html
@@ -17,6 +17,10 @@ import re
 import sys
 from pathlib import Path
 
+FIRST_YEAR, LAST_YEAR = 1800, 2199
+CENTURIES = ("1701-1800", "1801-1900", "1901-2000", "2001-2100", "2101-2200")
+SOLAR_PAGES = tuple(f"SE{c}" for c in CENTURIES)
+LUNAR_PAGES = tuple(f"LE{c}" for c in CENTURIES)
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
 DATE = r"(\d{4}) (\w{3}) (\d{2})\s+(\d{2}:\d{2}:\d{2})"
 
@@ -47,10 +51,10 @@ def solar(cat_dir):
         r"(-?\d\.\d{4})\s+(\d\.\d{4})\s+(\d+[NS])\s+(\d+[EW])\s+(\d+)(?:\s+(\S+)\s+(\S+))?\s*$"
     )
     rows = []
-    for name in ("SE1801-1900", "SE1901-2000", "SE2001-2100"):
+    for name in SOLAR_PAGES:
         for line in text(cat_dir / f"{name}.html").splitlines():
             m = pattern.match(line)
-            if not m or not 1850 <= int(m.group(1)) <= 2099:
+            if not m or not FIRST_YEAR <= int(m.group(1)) <= LAST_YEAR:
                 continue
             y, mo, d, td, dt, luna, saros, kind, gamma, mag, lat, lon, alt, width, dur = m.groups()
             rows.append([iso(y, mo, d), td, luna, saros, kind, gamma, mag,
@@ -67,10 +71,10 @@ def lunar(cat_dir):
         r"(-?\d\.\d{4})\s+(-?\d\.\d{4})\s+(-?\d\.\d{4})\s+(\S+)\s+(\S+)\s+(\S+)\s+"
     )
     rows = []
-    for name in ("LE1801-1900", "LE1901-2000", "LE2001-2100"):
+    for name in LUNAR_PAGES:
         for line in text(cat_dir / f"{name}.html").splitlines():
             m = pattern.match(line)
-            if not m or not 1850 <= int(m.group(1)) <= 2099:
+            if not m or not FIRST_YEAR <= int(m.group(1)) <= LAST_YEAR:
                 continue
             y, mo, d, td, dt, luna, saros, kind, gamma, pen, um, pdur, udur, tdur = m.groups()
             rows.append([iso(y, mo, d), td, luna, saros, kind, gamma, pen, um,
