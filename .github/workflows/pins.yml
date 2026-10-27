@@ -1,0 +1,19 @@
+# Weekly, and on demand: fails when Navigate or the MapLibre fork has moved past the revision
+# Eclipse pins, so the pins are brought up and the checks run against the new code.
+name: Pins
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pins:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compare the pins with upstream main
+        run: scripts/check-pins.sh

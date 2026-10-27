@@ -1,0 +1,50 @@
+# Runs scripts/check.sh on every pull request and on main: the default gate, and in parallel
+# the long-range tests that compare every eclipse of NASA's Five Millennium Canons from -1999
+# to 2999 and the ancient records, so neither merges broken.
+name: Checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_PROFILE_DEV_DEBUG: "0"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned Rust toolchain
+        # rust-toolchain.toml selects the compiler, components and wasm32 target.
+        run: rustup toolchain install && rustup show active-toolchain
+      - uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Install protoc
+        # The MapLibre fork compiles its tile schemas.
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
+      - name: Run the checks
+        run: scripts/check.sh
+
+  long-range:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install the pinned Rust toolchain
+        run: rustup toolchain install && rustup show active-toolchain
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: long-range
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Compare five millennia of eclipses and the ancient records
+        run: scripts/check.sh long-range
