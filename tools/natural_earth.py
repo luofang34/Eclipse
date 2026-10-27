@@ -5,6 +5,9 @@ Usage: python3 -I tools/natural_earth.py NE_DIR crates/eclipse-web/assets
 NE_DIR holds ne_50m_land.geojson and ne_50m_admin_0_boundary_lines_land.geojson
 from github.com/nvkelso/natural-earth-vector. Properties are dropped and
 coordinates rounded to 0.02 degrees, about 2 km, finer than a globe-scale pixel.
+
+coast.geojson is the land's outline without the edges no shore makes: where a polygon
+is cut along the antimeridian, and where Antarctica's is closed across the pole.
 """
 import json
 import sys
@@ -49,9 +52,43 @@ def convert(source, target):
     print(f"{target}: {len(features)} features, {target.stat().st_size} bytes")
 
 
+def artificial(a, b):
+    """Whether the edge from a to b is a cut rather than a shore."""
+    along_antimeridian = abs(a[0]) == 180 and abs(b[0]) == 180
+    across_the_pole = a[1] < -85 and b[1] < -85
+    return along_antimeridian or across_the_pole
+
+
+def coast(source, target):
+    lines = []
+    for f in json.loads(source.read_text())["features"]:
+        g = geometry(f["geometry"])
+        if not g:
+            continue
+        polygons = g["coordinates"] if g["type"] == "MultiPolygon" else [g["coordinates"]]
+        for polygon in polygons:
+            for r in polygon:
+                line = [r[0]]
+                for a, b in zip(r, r[1:]):
+                    if artificial(a, b):
+                        if len(line) > 1:
+                            lines.append(line)
+                        line = [b]
+                    else:
+                        line.append(b)
+                if len(line) > 1:
+                    lines.append(line)
+    doc = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "properties": {},
+         "geometry": {"type": "MultiLineString", "coordinates": lines}}]}
+    target.write_text(json.dumps(doc, separators=(",", ":")))
+    print(f"{target}: {len(lines)} lines, {target.stat().st_size} bytes")
+
+
 def main():
     src, dst = Path(sys.argv[1]), Path(sys.argv[2])
     convert(src / "ne_50m_land.geojson", dst / "land.geojson")
+    coast(src / "ne_50m_land.geojson", dst / "coast.geojson")
     convert(src / "ne_50m_admin_0_boundary_lines_land.geojson", dst / "borders.geojson")
 
 

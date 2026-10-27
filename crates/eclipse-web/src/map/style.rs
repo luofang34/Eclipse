@@ -3,11 +3,12 @@
 
 use serde_json::{Value, json};
 
-use crate::basemap::{BORDERS, LAND};
+use crate::basemap::{BORDERS, COAST, LAND};
 
 /// The basemap as a MapLibre style document.
 pub(super) fn basemap() -> Result<Value, serde_json::Error> {
     let land: Value = serde_json::from_str(LAND)?;
+    let coast: Value = serde_json::from_str(COAST)?;
     let borders: Value = serde_json::from_str(BORDERS)?;
     Ok(json!({
         "version": 8,
@@ -17,13 +18,14 @@ pub(super) fn basemap() -> Result<Value, serde_json::Error> {
         "projection": {"type": "vertical-perspective"},
         "sources": {
             "land": {"type": "geojson", "data": land},
+            "coast": {"type": "geojson", "data": coast},
             "borders": {"type": "geojson", "data": borders},
         },
         "layers": [
             {"id": "ocean", "type": "background", "paint": {"background-color": "#ffffff"}},
             {"id": "land", "type": "fill", "source": "land",
              "paint": {"fill-color": "#f4f1ea"}},
-            {"id": "coast", "type": "line", "source": "land",
+            {"id": "coast", "type": "line", "source": "coast",
              "paint": {"line-color": "#202020", "line-width": 0.8}},
             {"id": "borders", "type": "line", "source": "borders",
              "paint": {"line-color": "#e39a2d", "line-width": 0.8}},

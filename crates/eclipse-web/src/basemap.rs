@@ -1,17 +1,21 @@
-//! Natural Earth's 1:50m land and borders, which the globe's style and the SVG export draw.
+//! Natural Earth's 1:50m land, coasts and borders, which the globe's style and the SVG export
+//! draw.
 
 use eclipse_core::geodesy::LatLon;
 use serde_json::Value;
 
 /// Land polygons, as GeoJSON.
 pub(crate) const LAND: &str = include_str!("../assets/land.geojson");
+/// The land's shores, without the edges that close its polygons along the antimeridian and
+/// across the south pole, as GeoJSON.
+pub(crate) const COAST: &str = include_str!("../assets/coast.geojson");
 /// Country borders, as GeoJSON.
 pub(crate) const BORDERS: &str = include_str!("../assets/borders.geojson");
 
-/// The land outlines and borders as lines, for the SVG export.
+/// The coasts and borders as lines, for the SVG export.
 pub(crate) fn lines() -> Result<eclipse_svg::Basemap, serde_json::Error> {
     Ok(eclipse_svg::Basemap {
-        land: rings(&serde_json::from_str(LAND)?),
+        land: rings(&serde_json::from_str(COAST)?),
         borders: rings(&serde_json::from_str(BORDERS)?),
     })
 }
