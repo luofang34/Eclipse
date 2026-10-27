@@ -95,6 +95,11 @@ impl SolarEclipse {
     /// The solar eclipse at the new moon nearest `jd_tt`, or `None` if there is none.
     pub fn near(jd_tt: f64) -> Result<Option<Self>, EclipseError> {
         let coarse = closest_approach(jd_tt)?;
+        // The penumbra misses the Earth by a margin the refinement cannot close.
+        let rough = Elements::new(&bodies(coarse)?);
+        if rough.x.hypot(rough.y) > 1.0 + rough.l1 + 0.02 {
+            return Ok(None);
+        }
         let track = Track::sample(coarse - HALF_SPAN, coarse + HALF_SPAN)?;
         let gamma_at = |t: f64| -> Result<f64, EclipseError> {
             let e = Elements::new(&track.at(t)?);
