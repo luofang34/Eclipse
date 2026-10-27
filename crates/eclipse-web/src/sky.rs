@@ -18,8 +18,8 @@ mod drawing;
 
 pub(crate) use drawing::draw;
 
-/// How long the flight down from the globe takes, seconds.
-const FLIGHT_S: f64 = 5.0;
+/// How long the flight down from the globe takes, seconds, as Sokoly-Demos' sky cases fly in.
+const FLIGHT_S: f64 = 6.0;
 /// The faintest stars shown, about what the eye sees in a dark sky.
 const FAINTEST_MAGNITUDE: f64 = 6.0;
 /// The stars are placed again once the clock has moved this far, days: the sky turns a

@@ -122,3 +122,53 @@ fn the_flight_leaves_its_first_pose_and_lands_on_its_last_above_the_ground() {
         assert!(angle(forward, forward_end) < 1e-6, "forward at {t}");
     }
 }
+
+/// TT for a UTC Julian date in 2026: TAI - UTC is 37 s and TT - TAI 32.184 s.
+fn tt_from_utc(jd_utc: f64) -> f64 {
+    jd_utc + 69.184 / 86_400.0
+}
+
+/// Sokoly-Demos' sky cases, which this view's fly-in follows: the eye lands at the observer
+/// looking along the body's azimuth and elevation. Navigate's Sun and Moon, as this view
+/// takes them, stand there, and the standing pose looks straight at them.
+#[test]
+fn sokoly_demos_sunshine_and_moonlight() {
+    let sunshine = (
+        "Sunshine",
+        LatLon {
+            lat: 41.07204,
+            lon: -71.85733,
+        },
+        CalendarTime::jd_at_midnight(2026, 6, 14) + (9.0 + 19.0 / 60.0 + 39.647 / 3600.0) / 24.0,
+        [58.397, 0.0],
+        true,
+    );
+    let moonlight = (
+        "Moonlight",
+        LatLon {
+            lat: 39.04855,
+            lon: -77.11311,
+        },
+        CalendarTime::jd_at_midnight(2026, 10, 27) + (1.0 + 42.0 / 60.0) / 24.0,
+        [92.175, 37.001],
+        false,
+    );
+    for (name, site, jd_utc, [azimuth, elevation], sun) in [sunshine, moonlight] {
+        let epoch = tt_epoch(tt_from_utc(jd_utc));
+        let eye = surface(site).map(|c| c * EARTH_RADIUS_M);
+        let sight = if sun {
+            navigate_celestial::sun_ecef_tt(epoch, Some(eye))
+        } else {
+            navigate_celestial::moon_ecef_tt(epoch, Some(eye))
+        };
+        let direction = sight.unwrap().direction;
+        let [a, e] = horizontal(site, direction);
+        println!("{name}: azimuth {a:.3}°, elevation {e:.3}°");
+        assert!((a - azimuth).abs() < 0.01, "{name} azimuth {a}");
+        assert!((e - elevation).abs() < 0.01, "{name} elevation {e}");
+        let [sphere_azimuth, sphere_elevation] = on_sphere(site, direction);
+        let pose = standing(site, sphere_azimuth, sphere_elevation, RADIUS);
+        let (_, forward) = eye_and_forward(&pose, RADIUS);
+        assert!(angle(forward, globe_world(direction)) < 1e-6, "{name}");
+    }
+}
