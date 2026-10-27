@@ -2,27 +2,22 @@
 //! and look at the Sun or the Moon, which Navigate places as that place sees them, with the
 //! Moon seen from the place itself rather than the Earth's centre.
 
-use cgmath::{InnerSpace, Matrix, Matrix3, Quaternion, Rotation, Vector3};
 use eclipse_core::{
     EARTH_RADIUS_M,
     geodesy::{LatLon, surface},
     time::tt_epoch,
 };
-use maplibre::{
-    celestial::ecef_to_globe_world, projection::globe::EARTH_RADIUS_METERS,
-    render::view_state::GlobePose,
-};
+use maplibre::{projection::globe::EARTH_RADIUS_METERS, render::view_state::GlobePose};
 
-use crate::map::SkyFrame;
+use crate::{
+    eye::{self, Pose},
+    map::SkyFrame,
+};
 
 mod drawing;
 
 pub(crate) use drawing::draw;
 
-/// The eye's height above the ground, metres.
-const EYE_HEIGHT_M: f64 = 2.0;
-/// How far ahead of a standing eye its pose's target lies, metres.
-const STANDING_TARGET_M: f64 = 1000.0;
 /// How long the flight down from the globe takes, seconds.
 const FLIGHT_S: f64 = 5.0;
 /// The faintest stars shown, about what the eye sees in a dark sky.
@@ -59,7 +54,7 @@ pub(crate) struct SkyView {
 
 /// The camera's way down: from the pose it had to the standing one.
 struct Flight {
-    from: GlobePose,
+    from: Pose,
     started_s: Option<f64>,
 }
 
@@ -73,7 +68,12 @@ impl SkyView {
             field_of_view: LANDING_FIELD_OF_VIEW,
             follow: Some(body),
             flight: from.map(|from| Flight {
-                from,
+                from: Pose {
+                    target: from.target,
+                    target_elevation_meters: from.target_elevation_meters,
+                    orientation: from.orientation,
+                    distance_meters: from.distance_meters,
+                },
                 started_s: None,
             }),
             shown: None,
@@ -94,7 +94,8 @@ impl SkyView {
             None => None,
         };
         if let Some((direction, _)) = toward {
-            let [azimuth, elevation] = horizontal(self.site, direction);
+            // Against the sphere's horizon, the one the camera is posed on.
+            let [azimuth, elevation] = eye::on_sphere(self.site, direction);
             self.azimuth = azimuth;
             self.elevation = elevation;
         }
@@ -109,17 +110,33 @@ impl SkyView {
 
     /// The camera's pose at `now_s` seconds of page time, partway down while flying.
     pub(crate) fn pose(&mut self, now_s: f64) -> GlobePose {
-        let standing = self.standing_pose();
-        let Some(flight) = &mut self.flight else {
-            return standing;
+        // The view is kept at or above the horizon, so the target stays above the ground.
+        self.elevation = eye::standing_elevation(self.elevation);
+        let standing = eye::standing(self.site, self.azimuth, self.elevation, EARTH_RADIUS_METERS);
+        let pose = match &mut self.flight {
+            None => standing,
+            Some(flight) => {
+                let started = *flight.started_s.get_or_insert(now_s);
+                let progress = ((now_s - started) / FLIGHT_S).clamp(0.0, 1.0);
+                if progress >= 1.0 {
+                    self.flight = None;
+                    standing
+                } else {
+                    eye::between(
+                        &flight.from,
+                        &standing,
+                        eye::smooth(progress),
+                        EARTH_RADIUS_METERS,
+                    )
+                }
+            }
         };
-        let started = *flight.started_s.get_or_insert(now_s);
-        let progress = ((now_s - started) / FLIGHT_S).clamp(0.0, 1.0);
-        if progress >= 1.0 {
-            self.flight = None;
-            return standing;
+        GlobePose {
+            target: pose.target,
+            target_elevation_meters: pose.target_elevation_meters,
+            orientation: pose.orientation,
+            distance_meters: pose.distance_meters,
         }
-        between(&flight.from, &standing, smooth(progress))
     }
 
     /// The field of view for this frame: widening out from the globe's while flying.
@@ -130,24 +147,12 @@ impl SkyView {
         });
         match progress {
             Some(p) => {
-                let p = smooth(p);
+                let p = eye::smooth(p);
                 crate::map::GLOBE_FIELD_OF_VIEW * (1.0 - p) + self.field_of_view * p
             }
             None if self.flying() => crate::map::GLOBE_FIELD_OF_VIEW,
             None => self.field_of_view,
         }
-    }
-
-    /// The pose standing at the site and looking at the view's azimuth and elevation. The
-    /// view is kept at or above the horizon, so the target stays above the ground.
-    fn standing_pose(&mut self) -> GlobePose {
-        self.elevation = self.elevation.clamp(0.0, 89.5);
-        let (up, east, north) = local_axes(self.site);
-        let (azimuth, elevation) = (self.azimuth.to_radians(), self.elevation.to_radians());
-        let forward =
-            (east * azimuth.sin() + north * azimuth.cos()) * elevation.cos() + up * elevation.sin();
-        let eye = up * (EARTH_RADIUS_METERS + EYE_HEIGHT_M);
-        pose_at(eye, forward, up, STANDING_TARGET_M)
     }
 
     /// The Sun, the Moon and, when they moved, the stars at `jd_tt` from the site.
@@ -181,124 +186,4 @@ impl SkyView {
             stars,
         }
     }
-}
-
-/// Azimuth east of north and elevation, degrees, of the ECEF `direction` seen from `site`.
-pub(crate) fn horizontal(site: LatLon, direction: [f64; 3]) -> [f64; 2] {
-    let up = eclipse_core::geodesy::up(site);
-    let lon = site.lon.to_radians();
-    let east = [-lon.sin(), lon.cos(), 0.0];
-    let north = cross(up, east);
-    let along = |axis: [f64; 3]| axis.iter().zip(direction).map(|(a, d)| a * d).sum::<f64>();
-    let azimuth = along(east)
-        .atan2(along(north))
-        .to_degrees()
-        .rem_euclid(360.0);
-    [azimuth, along(up).clamp(-1.0, 1.0).asin().to_degrees()]
-}
-
-fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [
-        a[1] * b[2] - a[2] * b[1],
-        a[2] * b[0] - a[0] * b[2],
-        a[0] * b[1] - a[1] * b[0],
-    ]
-}
-
-/// Up, east and north at `site` on the renderer's sphere, in globe world axes.
-fn local_axes(site: LatLon) -> (Vector3<f64>, Vector3<f64>, Vector3<f64>) {
-    let (lat, lon) = (site.lat.to_radians(), site.lon.to_radians());
-    let up = Vector3::new(lat.cos() * lon.cos(), lat.cos() * lon.sin(), lat.sin());
-    let east = Vector3::new(-lon.sin(), lon.cos(), 0.0);
-    let north = up.cross(east);
-    (
-        ecef_to_globe_world(up),
-        ecef_to_globe_world(east),
-        ecef_to_globe_world(north),
-    )
-}
-
-/// The pose with its eye at `eye`, in globe world metres, looking along `forward` with
-/// `up` towards the top of the frame, its target `distance` metres ahead.
-fn pose_at(eye: Vector3<f64>, forward: Vector3<f64>, up: Vector3<f64>, distance: f64) -> GlobePose {
-    let forward = forward.normalize();
-    let side = forward.cross(up);
-    let right = if side.magnitude2() > 1e-12 {
-        side.normalize()
-    } else {
-        forward.cross(Vector3::unit_y()).normalize()
-    };
-    let camera_up = right.cross(forward);
-    // The camera looks along its negative z with y up; the rows take the body's frame into it.
-    let orientation = Quaternion::from(Matrix3::from_cols(right, camera_up, -forward).transpose());
-    let target = eye + forward * distance;
-    GlobePose {
-        target: target.normalize().into(),
-        target_elevation_meters: target.magnitude() - EARTH_RADIUS_METERS,
-        orientation: [
-            orientation.s,
-            orientation.v.x,
-            orientation.v.y,
-            orientation.v.z,
-        ],
-        distance_meters: distance,
-    }
-}
-
-/// Where a pose's eye stands and where it looks, in globe world metres.
-fn eye_and_forward(pose: &GlobePose) -> (Vector3<f64>, Vector3<f64>, Quaternion<f64>) {
-    let [w, x, y, z] = pose.orientation;
-    let orientation = Quaternion::new(w, x, y, z).normalize();
-    let forward = -orientation.conjugate().rotate_vector(Vector3::unit_z());
-    let target = Vector3::from(pose.target) * (EARTH_RADIUS_METERS + pose.target_elevation_meters);
-    (
-        target - forward * pose.distance_meters,
-        forward,
-        orientation,
-    )
-}
-
-/// The pose `t` of the way from `from` to `to`: the eye along the great circle between
-/// them, its height falling geometrically, and its orientation turning evenly.
-fn between(from: &GlobePose, to: &GlobePose, t: f64) -> GlobePose {
-    let (eye0, _, q0) = eye_and_forward(from);
-    let (eye1, _, q1) = eye_and_forward(to);
-    let (h0, h1) = (
-        (eye0.magnitude() - EARTH_RADIUS_METERS).max(EYE_HEIGHT_M),
-        (eye1.magnitude() - EARTH_RADIUS_METERS).max(EYE_HEIGHT_M),
-    );
-    let direction = slerp_vector(eye0.normalize(), eye1.normalize(), t);
-    let height = (h0.ln() * (1.0 - t) + h1.ln() * t).exp();
-    let eye = direction * (EARTH_RADIUS_METERS + height);
-    // The shorter way round.
-    let q1 = if q0.dot(q1) < 0.0 { -q1 } else { q1 };
-    let orientation = q0.slerp(q1, t).normalize();
-    let forward = -orientation.conjugate().rotate_vector(Vector3::unit_z());
-    // A target nearer than the eye's height stays above the ground whichever way it looks.
-    let distance = 0.5 * height;
-    let target = eye + forward * distance;
-    GlobePose {
-        target: target.normalize().into(),
-        target_elevation_meters: target.magnitude() - EARTH_RADIUS_METERS,
-        orientation: [
-            orientation.s,
-            orientation.v.x,
-            orientation.v.y,
-            orientation.v.z,
-        ],
-        distance_meters: distance,
-    }
-}
-
-fn slerp_vector(a: Vector3<f64>, b: Vector3<f64>, t: f64) -> Vector3<f64> {
-    let angle = a.dot(b).clamp(-1.0, 1.0).acos();
-    if angle < 1e-9 {
-        return a;
-    }
-    (a * ((1.0 - t) * angle).sin() + b * (t * angle).sin()) / angle.sin()
-}
-
-/// Eases in and out.
-fn smooth(t: f64) -> f64 {
-    t * t * (3.0 - 2.0 * t)
 }

@@ -91,7 +91,7 @@ impl EclipseApp {
             .map_or((None, None), |f| (f.sun, f.moon));
         for (name, body) in [("Sun", sun), ("Moon", moon)] {
             if let Some((direction, _)) = body {
-                let [azimuth, elevation] = sky::horizontal(view.site, direction);
+                let [azimuth, elevation] = crate::eye::horizontal(view.site, direction);
                 ui.label(format!("{name}: {elevation:.1}° up, azimuth {azimuth:.0}°"));
             }
         }

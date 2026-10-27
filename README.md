@@ -39,6 +39,7 @@ change the field of view.
     cargo clippy -p eclipse-core -p eclipse-svg --all-targets -- -D warnings
     cargo clippy -p eclipse-web --target wasm32-unknown-unknown --all-targets -- -D warnings
     cargo test -p eclipse-core -p eclipse-svg --release
+    cargo test -p eclipse-web    # the sky view's geometry, built natively
     cargo clippy -p eclipse-core --all-targets --features long-range -- -D warnings
     cargo test -p eclipse-core --release --features long-range    # a few minutes
     RUSTDOCFLAGS="-D missing_docs -D broken_intra_doc_links" cargo doc -p eclipse-core -p eclipse-svg --no-deps

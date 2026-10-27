@@ -12,8 +12,9 @@ use eframe::egui::{
 };
 use maplibre::projection::globe::EARTH_RADIUS_METERS;
 
-use super::{EYE_HEIGHT_M, SkyView};
+use super::SkyView;
 use crate::{
+    eye::EYE_HEIGHT_M,
     map::{Projector, SkyFrame},
     selection::Selected,
 };
@@ -44,7 +45,7 @@ pub(crate) fn draw(
     let place = |d: [f64; 3]| screen(projector, view.site, d);
     let sun_elevation = sky
         .sun
-        .map_or(-90.0, |(d, _)| super::horizontal(view.site, d)[1]);
+        .map_or(-90.0, |(d, _)| crate::eye::horizontal(view.site, d)[1]);
     ground(painter, rect, view, sun_elevation, &place);
     match selected {
         Selected::Solar { eclipse, .. } => {

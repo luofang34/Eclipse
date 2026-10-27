@@ -11,6 +11,7 @@ license.workspace = true
 eclipse-core = { path = "../eclipse-core" }
 eclipse-svg = { path = "../eclipse-svg" }
 navigate-celestial.workspace = true
+cgmath = "0.18"
 thiserror.workspace = true
 tracing.workspace = true
 
@@ -19,7 +20,6 @@ maplibre = { git = "https://github.com/luofang34/maplibre-rs-experimental", rev 
 wgpu = "30.0.1"
 eframe = { version = "0.36.2", default-features = false, features = ["wgpu", "default_fonts"] }
 egui-wgpu = "0.36.2"
-cgmath = "0.18"
 serde_json = "1"
 web-time = "1"
 wasm-bindgen = "0.2"

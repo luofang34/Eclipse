@@ -5,8 +5,11 @@
 mod app;
 #[cfg(target_arch = "wasm32")]
 mod basemap;
+// Geometry the page uses, built natively too so its tests run.
 #[cfg(target_arch = "wasm32")]
 mod export;
+#[cfg_attr(not(target_arch = "wasm32"), allow(dead_code))]
+mod eye;
 #[cfg(target_arch = "wasm32")]
 mod figure;
 #[cfg(target_arch = "wasm32")]
