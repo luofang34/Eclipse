@@ -74,11 +74,17 @@ impl EclipseApp {
             look: None,
         };
         app.load_year(year);
+        let upcoming = |list: &[Eclipse]| list.iter().position(|e| e.greatest_tt() > today);
+        // Without a date, the next eclipse to come, in the following year if this one has
+        // no more.
+        if wanted.is_none() && upcoming(&app.list).is_none() && year < *panel::YEARS.end() {
+            app.load_year(year + 1);
+        }
         let index = app
             .list
             .iter()
             .position(|e| Some(CalendarTime::from_jd(e.greatest_tt()).iso_date()) == wanted)
-            .or_else(|| app.list.iter().position(|e| e.greatest_tt() > today))
+            .or_else(|| upcoming(&app.list))
             .or(if app.list.is_empty() { None } else { Some(0) });
         if let Some(index) = index {
             app.select(index);
