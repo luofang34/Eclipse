@@ -3,11 +3,20 @@
 //! Lunation 0 is the new moon of 2000 January 6. Eclipses a Saros (223 lunations) apart
 //! share a series; eclipses an inex (358 lunations) apart are in neighbouring series, the
 //! later one numbered one lower. Each series is anchored on one catalogued eclipse.
+//!
+//! A lunation's eclipse belongs to one of the series 223 apart that the inex relation
+//! allows. The series in progress drift by about one per [`LUNATIONS_PER_SERIES`], and over
+//! the Canons' five millennia every eclipse lies within 26 series of that drift, so the one
+//! within half a cycle of it is taken.
 
 /// The mean new moon of lunation 0, TT Julian date (Meeus, chapter 49).
 pub const LUNATION_ZERO: f64 = 2_451_550.097_66;
 /// The mean synodic month in days.
 pub const SYNODIC_MONTH: f64 = 29.530_588_861;
+
+/// Lunations over which the series in progress move on by one, fitted to the Canons from
+/// -1999 to 3000.
+pub const LUNATIONS_PER_SERIES: f64 = 383.0;
 
 /// The lunation of a solar eclipse at `jd_tt`: the nearest new moon's number.
 pub fn solar_lunation(jd_tt: f64) -> i64 {
@@ -32,11 +41,13 @@ pub fn lunar_saros(lunation: i64) -> i64 {
 }
 
 /// The series `s = anchor_series + m` with `lunation - anchor = 223 n + 358 m`, taking
-/// the `m` that keeps the series within half a Saros cycle of the anchor's.
+/// the `m` within half a Saros cycle of the series in progress at that lunation.
 fn series(lunation: i64, anchor: i64, anchor_series: i64) -> i64 {
+    let offset = lunation - anchor;
+    let drift = (offset as f64 / LUNATIONS_PER_SERIES).round() as i64;
     // 358 = 135 mod 223, and 135 * 38 = 5130 = 1 mod 223.
-    let m = ((lunation - anchor) * 38).rem_euclid(223);
-    let m = if m > 111 { m - 223 } else { m };
+    let m = (offset * 38).rem_euclid(223);
+    let m = m + 223 * (drift - m + 111).div_euclid(223);
     anchor_series + m
 }
 

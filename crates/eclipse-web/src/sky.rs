@@ -6,7 +6,7 @@ use cgmath::{InnerSpace, Matrix, Matrix3, Quaternion, Rotation, Vector3};
 use eclipse_core::{
     EARTH_RADIUS_M,
     geodesy::{LatLon, surface},
-    time::{civil_epoch, tt_epoch},
+    time::tt_epoch,
 };
 use maplibre::{
     celestial::ecef_to_globe_world, projection::globe::EARTH_RADIUS_METERS,
@@ -162,7 +162,7 @@ impl SkyView {
             .is_none_or(|at| (jd_tt - at).abs() >= STAR_REFRESH_DAYS);
         let stars = stale.then(|| {
             self.stars_at = Some(jd_tt);
-            navigate_celestial::stars_ecef(civil_epoch(jd_tt), FAINTEST_MAGNITUDE)
+            navigate_celestial::stars_ecef_tt(epoch, FAINTEST_MAGNITUDE)
                 .map(|stars| {
                     stars
                         .into_iter()

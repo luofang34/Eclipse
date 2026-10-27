@@ -307,6 +307,7 @@ fn delta_t(tt: f64) -> String {
         DeltaTBasis::Observed => "observed",
         DeltaTBasis::Predicted => "IERS prediction",
         DeltaTBasis::Extrapolated => "extrapolated",
+        DeltaTBasis::Modelled => "Espenak–Meeus model",
     };
     format!(
         "{:.1} s ± {:.1} ({basis})",

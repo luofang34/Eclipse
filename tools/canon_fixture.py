@@ -4,12 +4,12 @@ Usage:
     python3 -I tools/canon_fixture.py CAT_DIR crates/eclipse-core/tests/fixtures \
         2026_08_12=SE2026Aug12Tpath.html 2026_02_17=SE2026Feb17Apath.html
 
-CAT_DIR holds the Five Millennium Canon catalogue pages SE1701-1800.html to
-SE2101-2200.html and LE1701-1800.html to LE2101-2200.html from
+CAT_DIR holds the Five Millennium Canon catalogue pages SE-1999--1900.html to
+SE2901-3000.html and LE-1999--1900.html to LE2901-3000.html from
 https://eclipse.gsfc.nasa.gov/SEcat5/ and /LEcat5/.
 Each NAME=PATH_HTML is a path table from https://eclipse.gsfc.nasa.gov/SEpath/SEpath2001/,
 written to path_NAME.csv; a limit the table leaves out ("-") is left empty.
-Rows from 1800 to 2199 are kept: Navigate's Sun and Moon cover 1800 to 2200.
+Every row from -1999 to 3000 is kept; the tests take the years Navigate's build covers.
 """
 import csv
 import html
@@ -17,12 +17,19 @@ import re
 import sys
 from pathlib import Path
 
-FIRST_YEAR, LAST_YEAR = 1800, 2199
-CENTURIES = ("1701-1800", "1801-1900", "1901-2000", "2001-2100", "2101-2200")
+FIRST_YEAR, LAST_YEAR = -1999, 3000
+
+
+def signed(year):
+    """-584 -> '-0584', as the catalogues write years."""
+    return f"-{-year:04d}" if year < 0 else f"{year:04d}"
+
+
+CENTURIES = tuple(f"{signed(a)}-{signed(a + 99)}" for a in range(FIRST_YEAR, LAST_YEAR, 100))
 SOLAR_PAGES = tuple(f"SE{c}" for c in CENTURIES)
 LUNAR_PAGES = tuple(f"LE{c}" for c in CENTURIES)
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
-DATE = r"(\d{4}) (\w{3}) (\d{2})\s+(\d{2}:\d{2}:\d{2})"
+DATE = r"(-?\d{4}) (\w{3}) (\d{2})\s+(\d{2}:\d{2}:\d{2})"
 
 
 def text(path):
@@ -42,12 +49,14 @@ def minutes_seconds(value):
 
 
 def iso(year, month, day):
-    return f"{year}-{MONTHS.index(month) + 1:02d}-{day}"
+    """The date as -YYYY-MM-DD before year 0 and YYYY-MM-DD after, in the catalogue's
+    calendar: Julian before 1582 October 15, Gregorian from then."""
+    return f"{signed(int(year))}-{MONTHS.index(month) + 1:02d}-{day}"
 
 
 def solar(cat_dir):
     pattern = re.compile(
-        r"^\s*\d{5}\s+" + DATE + r"\s+(-?\d+)\s+(-?\d+)\s+(\d+)\s+(\w)\w?[+-]?\s+\S+\s+"
+        r"^\s*\d{5}\s+" + DATE + r"\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)\s+(\w)\w?[+-]?\s+\S+\s+"
         r"(-?\d\.\d{4})\s+(\d\.\d{4})\s+(\d+[NS])\s+(\d+[EW])\s+(\d+)(?:\s+(\S+)\s+(\S+))?\s*$"
     )
     rows = []
@@ -67,7 +76,7 @@ def solar(cat_dir):
 
 def lunar(cat_dir):
     pattern = re.compile(
-        r"^\s*\d{5}\s+" + DATE + r"\s+(-?\d+)\s+(-?\d+)\s+(\d+)\s+(\w)\w?[+-]?\s+\S+\s+"
+        r"^\s*\d{5}\s+" + DATE + r"\s+(-?\d+)\s+(-?\d+)\s+(-?\d+)\s+(\w)\w?[+-]?\s+\S+\s+"
         r"(-?\d\.\d{4})\s+(-?\d\.\d{4})\s+(-?\d\.\d{4})\s+(\S+)\s+(\S+)\s+(\S+)\s+"
     )
     rows = []

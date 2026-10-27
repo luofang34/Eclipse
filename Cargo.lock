@@ -2828,7 +2828,7 @@ dependencies = [
 [[package]]
 name = "navigate-celestial"
 version = "0.1.0"
-source = "git+https://github.com/luofang34/Navigate?rev=e652df2e9459095c2a98142ba4674607400e1dd9#e652df2e9459095c2a98142ba4674607400e1dd9"
+source = "git+https://github.com/luofang34/Navigate?rev=a87243a2e8799c813b7fe7226be82aacb52e9e68#a87243a2e8799c813b7fe7226be82aacb52e9e68"
 dependencies = [
  "hifitime",
  "nalgebra",

@@ -1,7 +1,6 @@
 //! Time: eclipses are computed in TT, as Julian days, and shown in TT and UT.
 //!
-//! Navigate's Sun and Moon take the TT instant itself. Its star catalogue takes a civil
-//! clock reading, UT1 before 1972 and UTC from 1972, which [`civil_epoch`] gives.
+//! Navigate takes the TT instant itself, and turns it to UT1 with its own Delta T.
 
 use navigate_celestial::{DeltaT, Epoch, TimeScale, delta_t};
 
@@ -15,22 +14,6 @@ pub fn tt_epoch(jd_tt: f64) -> Epoch {
     Epoch::from_mjd_in_time_scale(jd_tt - MJD_OFFSET, TimeScale::TT)
 }
 
-/// The civil reading Navigate interprets as the TT instant `jd_tt`.
-pub fn civil_epoch(jd_tt: f64) -> Epoch {
-    let epoch = tt_epoch(jd_tt);
-    if epoch >= Epoch::from_gregorian_utc_at_midnight(1972, 1, 1) {
-        return epoch;
-    }
-    // Before 1972 the reading is UT1, and Navigate takes Delta T at UT1.
-    let mjd_tt = jd_tt - MJD_OFFSET;
-    let mut ut1 = mjd_tt;
-    for _ in 0..3 {
-        let at_ut1 = Epoch::from_mjd_in_time_scale(ut1, TimeScale::TT);
-        ut1 = mjd_tt - delta_t(at_ut1).seconds / SECONDS_PER_DAY;
-    }
-    Epoch::from_mjd_utc(ut1)
-}
-
 /// Delta T = TT - UT1 at the TT instant `jd_tt`, with its uncertainty and basis.
 pub fn delta_t_at(jd_tt: f64) -> DeltaT {
     delta_t(tt_epoch(jd_tt))
@@ -41,7 +24,12 @@ pub fn ut1(jd_tt: f64) -> f64 {
     jd_tt - delta_t_at(jd_tt).seconds / SECONDS_PER_DAY
 }
 
-/// A Gregorian calendar date and time of day.
+/// The first day of the Gregorian calendar, 1582 October 15, as a Julian day number; the
+/// NASA catalogues date earlier eclipses in the Julian calendar.
+const GREGORIAN_REFORM: f64 = 2_299_161.0;
+
+/// A calendar date and time of day: Julian before 1582 October 15 and Gregorian from then,
+/// with astronomical year numbering (year 0 is 1 BC).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct CalendarTime {
     /// Year.
@@ -59,8 +47,8 @@ pub struct CalendarTime {
 }
 
 impl CalendarTime {
-    /// The Gregorian date and time of Julian date `jd`, rounded to the second (Meeus,
-    /// *Astronomical Algorithms*, chapter 7).
+    /// The date and time of Julian date `jd`, rounded to the second (Meeus, *Astronomical
+    /// Algorithms*, chapter 7).
     pub fn from_jd(jd: f64) -> Self {
         let seconds = ((jd + 0.5).fract() * SECONDS_PER_DAY).round();
         let (days, seconds) = if seconds >= SECONDS_PER_DAY {
@@ -68,8 +56,12 @@ impl CalendarTime {
         } else {
             ((jd + 0.5).floor(), seconds)
         };
-        let alpha = ((days - 1_867_216.25) / 36_524.25).floor();
-        let a = days + 1.0 + alpha - (alpha / 4.0).floor();
+        let a = if days < GREGORIAN_REFORM {
+            days
+        } else {
+            let alpha = ((days - 1_867_216.25) / 36_524.25).floor();
+            days + 1.0 + alpha - (alpha / 4.0).floor()
+        };
         let b = a + 1524.0;
         let c = ((b - 122.1) / 365.25).floor();
         let d = (365.25 * c).floor();
@@ -88,17 +80,24 @@ impl CalendarTime {
         }
     }
 
-    /// The Julian date of a Gregorian date at 0h.
+    /// The Julian date of a date at 0h, Julian before 1582 October 15 and Gregorian from
+    /// then.
     pub fn jd_at_midnight(year: i32, month: u8, day: u8) -> f64 {
         let (y, m) = if month <= 2 {
             (f64::from(year) - 1.0, f64::from(month) + 12.0)
         } else {
             (f64::from(year), f64::from(month))
         };
+        let julian =
+            (365.25 * (y + 4716.0)).floor() + (30.6001 * (m + 1.0)).floor() + f64::from(day)
+                - 1524.5;
         let a = (y / 100.0).floor();
-        let b = 2.0 - a + (a / 4.0).floor();
-        (365.25 * (y + 4716.0)).floor() + (30.6001 * (m + 1.0)).floor() + f64::from(day) + b
-            - 1524.5
+        let gregorian = julian + 2.0 - a + (a / 4.0).floor();
+        if gregorian + 0.5 < GREGORIAN_REFORM {
+            julian
+        } else {
+            gregorian
+        }
     }
 
     /// `YYYY Mon DD`, as the NASA catalogues write dates.
@@ -110,7 +109,7 @@ impl CalendarTime {
             .get(usize::from(self.month).saturating_sub(1))
             .copied()
             .unwrap_or("?");
-        format!("{} {month} {:02}", self.year, self.day)
+        format!("{} {month} {:02}", self.signed_year(), self.day)
     }
 
     /// `HH:MM:SS`.
@@ -118,9 +117,18 @@ impl CalendarTime {
         format!("{:02}:{:02}:{:02}", self.hour, self.minute, self.second)
     }
 
-    /// `YYYY-MM-DD`.
+    /// `YYYY-MM-DD`, or `-YYYY-MM-DD` before year 0.
     pub fn iso_date(&self) -> String {
-        format!("{:04}-{:02}-{:02}", self.year, self.month, self.day)
+        format!("{}-{:02}-{:02}", self.signed_year(), self.month, self.day)
+    }
+
+    /// The year in four digits with its sign, as the NASA catalogues write it: `-0584`.
+    fn signed_year(&self) -> String {
+        if self.year < 0 {
+            format!("-{:04}", -self.year)
+        } else {
+            format!("{:04}", self.year)
+        }
     }
 }
 

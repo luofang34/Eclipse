@@ -1,35 +1,46 @@
-//! Every lunar eclipse of NASA's Five Millennium Canon from 1800 to 2199 against what
-//! eclipse-core computes.
+//! Every lunar eclipse of NASA's Five Millennium Canon in the years Navigate covers, 1800
+//! to 2199 or with `long-range` -1999 to 2999, against what eclipse-core computes.
 
-use eclipse_core::{LunarEclipse, time::CalendarTime};
+use eclipse_core::LunarEclipse;
+
+#[path = "support/catalogue.rs"]
+mod catalogue;
+use catalogue::jd;
 
 const CATALOGUE: &str = include_str!("fixtures/lunar_catalogue.csv");
-
-#[cfg(test)]
-fn jd(date: &str, time: &str) -> f64 {
-    let d: Vec<i32> = date.split('-').map(|x| x.parse().unwrap()).collect();
-    let t: Vec<f64> = time.split(':').map(|x| x.parse().unwrap()).collect();
-    CalendarTime::jd_at_midnight(d[0], d[1] as u8, d[2] as u8)
-        + (t[0] + t[1] / 60.0 + t[2] / 3600.0) / 24.0
-}
+/// How far computed magnitudes may differ from the Canon's.
+const MAGNITUDE: f64 = 0.003;
 
 /// The ways one catalogue row differs from the computed eclipse.
 #[cfg(test)]
 fn check_row(line: &str, worst: &mut [f64; 4]) -> Vec<String> {
     let row: Vec<&str> = line.split(',').collect();
     let (date, td) = (row[0], row[1]);
+    let num = |i: usize| row[i].parse::<f64>().unwrap();
+    // Within the magnitudes' tolerance of a threshold, an eclipse may fall either side of
+    // it: a penumbral graze may be missed, a total eclipse read as partial.
+    let near = |magnitude: f64, threshold: f64| (magnitude - threshold).abs() < MAGNITUDE;
     let Some(e) = LunarEclipse::near(jd(date, td)).unwrap() else {
+        if near(num(6), 0.0) {
+            return Vec::new();
+        }
         return vec![format!("{date}: not found")];
     };
-    let num = |i: usize| row[i].parse::<f64>().unwrap();
+    let (total_edge, partial_edge) = (near(num(7), 1.0), near(num(7), 0.0));
     let mut failures = Vec::new();
     let mut check = |ok: bool, what: String| {
         if !ok {
             failures.push(format!("{date} {}: {what}", row[4]));
         }
     };
+    let types = [e.kind.code().to_string(), row[4].to_string()];
+    let borderline = match [types[0].as_str(), types[1].as_str()] {
+        ["T", "P"] | ["P", "T"] => total_edge,
+        ["P", "N"] | ["N", "P"] => partial_edge,
+        _ => false,
+    };
     check(
-        e.kind.code().to_string() == row[4],
+        types[0] == types[1] || borderline,
         format!("type {:?}", e.kind),
     );
     check(
@@ -50,16 +61,22 @@ fn check_row(line: &str, worst: &mut [f64; 4]) -> Vec<String> {
         format!("gamma {:.4} vs {}", e.gamma, row[5]),
     );
     check(
-        differences[1] < 0.003,
+        differences[1] < MAGNITUDE,
         format!("penumbral {:.4} vs {}", e.penumbral_magnitude, row[6]),
     );
     check(
-        differences[2] < 0.003,
+        differences[2] < MAGNITUDE,
         format!("umbral {:.4} vs {}", e.umbral_magnitude, row[7]),
     );
     let c = e.contacts;
     for (column, (a, b)) in [(8, (c.p1, c.p4)), (9, (c.u1, c.u4)), (10, (c.u2, c.u3))] {
-        if row[column].is_empty() {
+        // A phase whose magnitude sits at its threshold may not happen here.
+        let edge = match column {
+            9 => partial_edge,
+            10 => total_edge,
+            _ => false,
+        };
+        if row[column].is_empty() || (edge && a.is_none()) {
             continue;
         }
         let minutes = a.zip(b).map_or(f64::NAN, |(a, b)| (b - a) * 1440.0);
@@ -80,7 +97,7 @@ fn check_row(line: &str, worst: &mut [f64; 4]) -> Vec<String> {
 fn every_catalogued_lunar_eclipse() {
     let mut failures = Vec::new();
     let mut worst = [0.0_f64; 4];
-    for line in CATALOGUE.lines().skip(1) {
+    for line in catalogue::rows(CATALOGUE) {
         failures.extend(check_row(line, &mut worst));
     }
     println!(

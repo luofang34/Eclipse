@@ -39,12 +39,17 @@ change the field of view.
     cargo clippy -p eclipse-core -p eclipse-svg --all-targets -- -D warnings
     cargo clippy -p eclipse-web --target wasm32-unknown-unknown --all-targets -- -D warnings
     cargo test -p eclipse-core -p eclipse-svg --release
+    cargo clippy -p eclipse-core --all-targets --features long-range -- -D warnings
+    cargo test -p eclipse-core --release --features long-range    # a few minutes
     RUSTDOCFLAGS="-D missing_docs -D broken_intra_doc_links" cargo doc -p eclipse-core -p eclipse-svg --no-deps
     scripts/check-structure.sh
 
-The tests compare every eclipse of the Canons from 1800 to 2199, two published paths, and
-totality as the expeditions recorded it at Königsberg in 1851 and at Sobral and Príncipe in
-1919.
+The tests compare every eclipse of the Canons from 1800 to 2199, the Besselian elements and
+paths NASA published for 2026, and totality as the expeditions recorded it at Königsberg in
+1851 and at Sobral and Príncipe in 1919. With the `long-range` feature, which takes
+Navigate's Sun and Moon from -2000 to 3000, they compare every eclipse of the Canons from
+-1999 to 2999 and the records of Bur-Sagale (-762), Thales (-584), Babylon (-135),
+Columbus (1504) and Halley (1715); dates before 1582 October 15 are Julian.
 Their fixtures come from NASA's pages through `tools/canon_fixture.py`; the basemap's
 coastlines and borders come from Natural Earth through `tools/natural_earth.py`.
 

@@ -11,5 +11,9 @@ license.workspace = true
 navigate-celestial.workspace = true
 thiserror.workspace = true
 
+[features]
+# Navigate's Sun and Moon from -2000 to 3000, with the Canon's Delta T before 1800.
+long-range = ["navigate-celestial/long-range"]
+
 [lints]
 workspace = true

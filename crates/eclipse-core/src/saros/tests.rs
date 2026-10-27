@@ -12,6 +12,10 @@ fn catalogue_series() {
         (1233, 136),
         (-1836, 143),
         (-997, 136),
+        // Bur-Sagale, -762 June 15; Thales, -584 May 28; Babylon, -135 April 15.
+        (-34_156, 44),
+        (-31_955, 57),
+        (-26_403, 75),
     ] {
         assert_eq!(solar_saros(lunation), saros, "solar lunation {lunation}");
     }
@@ -22,6 +26,8 @@ fn catalogue_series() {
         (-1772, 134),
         (188, 132),
         (364, 130),
+        // Columbus's eclipse, 1504 March 1.
+        (-6_133, 105),
     ] {
         assert_eq!(lunar_saros(lunation), saros, "lunar lunation {lunation}");
     }
