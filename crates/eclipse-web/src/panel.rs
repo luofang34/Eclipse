@@ -155,6 +155,20 @@ fn lunar_details(ui: &mut egui::Ui, e: &LunarEclipse) {
 /// The map's legend for the chosen eclipse.
 pub(crate) fn legend(ui: &mut egui::Ui, selected: &Selected) {
     let entries: &[(&str, Color32, bool)] = match selected {
+        Selected::Solar { eclipse, .. } if eclipse.kind == eclipse_core::SolarKind::Partial => &[
+            ("Penumbral limits", palette::PENUMBRA, false),
+            (
+                "Begins or ends at sunrise or sunset",
+                palette::PENUMBRA,
+                false,
+            ),
+            (
+                "Maximum eclipse at sunrise or sunset",
+                palette::MAX_RISE_SET,
+                false,
+            ),
+            ("Magnitude 0.5 at maximum", palette::PENUMBRA, true),
+        ],
         Selected::Solar { .. } => &[
             ("Penumbral limits", palette::PENUMBRA, false),
             (
