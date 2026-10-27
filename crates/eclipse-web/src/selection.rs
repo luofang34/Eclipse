@@ -36,6 +36,15 @@ pub(crate) enum Local {
     Lunar(LatLon, Vec<(&'static str, f64, f64)>),
 }
 
+impl Local {
+    /// The place.
+    pub(crate) fn at(&self) -> LatLon {
+        match self {
+            Self::Solar(at, _) | Self::Lunar(at, _) => *at,
+        }
+    }
+}
+
 impl Selected {
     /// Computes the map of `eclipse`.
     pub(crate) fn of(eclipse: &Eclipse) -> Result<Self, EclipseError> {

@@ -26,6 +26,13 @@ The page needs the `wasm32-unknown-unknown` target, [trunk](https://trunkrs.dev)
 `?date=YYYY-MM-DD` opens the eclipse of that date. **Save SVG** in the time bar saves the
 eclipse on show as an animated SVG.
 
+Under **A place**, type a latitude and longitude or pick a city to see the eclipse from
+there; **Find eclipses seen here** lists the next ones visible from it. **Stand at greatest
+eclipse**, **Stand under the Moon** and **See the sky from this place** fly down to stand on
+the ground and watch the Sun or the Moon, with Navigate's Sun, its Moon as seen from that
+place, and its stars, drawn by the MapLibre fork's sky. Drag to look around and scroll to
+change the field of view.
+
 ## Checks
 
     cargo fmt --check

@@ -6,12 +6,18 @@ use eframe::egui::{self, Color32, Sense};
 use egui_wgpu::{WgpuConfiguration, WgpuSetupCreateNew};
 
 use crate::{
-    figure, globe,
+    figure,
+    finder::Finder,
+    globe,
     map::{Gesture, MapError, MapView},
     panel::{self, Action},
     selection::{Local, Selected},
+    sky::SkyView,
     web,
 };
+
+mod places;
+mod sky_mode;
 
 /// Days of eclipse a second of playing shows: an hour in twelve seconds.
 const PLAY_RATE: f64 = 5.0 / 1440.0;
@@ -40,6 +46,12 @@ pub(crate) struct EclipseApp {
     error: Option<String>,
     /// Where the globe turns to once it can.
     look: Option<LatLon>,
+    /// The view from the ground, while the eye stands there.
+    sky: Option<SkyView>,
+    /// The search for eclipses seen from a place.
+    finder: Option<Finder>,
+    /// The place typed in.
+    place_text: String,
 }
 
 impl EclipseApp {
@@ -72,6 +84,9 @@ impl EclipseApp {
             local: None,
             error: None,
             look: None,
+            sky: None,
+            finder: None,
+            place_text: String::new(),
         };
         app.load_year(year);
         let upcoming = |list: &[Eclipse]| list.iter().position(|e| e.greatest_tt() > today);
@@ -118,6 +133,9 @@ impl EclipseApp {
     }
 
     fn select(&mut self, index: usize) {
+        if self.sky.is_some() {
+            self.leave_sky();
+        }
         let Some(eclipse) = self.list.get(index) else {
             return;
         };
@@ -167,6 +185,10 @@ impl EclipseApp {
             panel::legend(ui, selected);
         }
         ui.separator();
+        if self.sky.is_some() {
+            self.sky_panel(ui);
+            ui.separator();
+        }
         match &self.local {
             Some(local) => panel::local(ui, local),
             None => {
@@ -176,6 +198,8 @@ impl EclipseApp {
                 );
             }
         }
+        ui.separator();
+        self.places_panel(ui);
         ui.separator();
         ui.small(
             "Sun and Moon from Navigate's analytic ephemeris; ΔT from IERS and USNO data. \
@@ -244,10 +268,19 @@ impl EclipseApp {
                 }
             }
         }
-        let Some(map) = &mut self.map else { return };
-        if map.size() != size {
+        if let Some(map) = &mut self.map
+            && map.size() != size
+        {
             map.resize(size, f64::from(ppp));
         }
+        if self.sky.is_some() {
+            let response = ui.allocate_rect(rect, Sense::click_and_drag());
+            if self.sky_globe(ui, rect, &response) {
+                ui.ctx().request_repaint();
+            }
+            return;
+        }
+        let Some(map) = &mut self.map else { return };
         if let Some(at) = self.look.take() {
             let wanted = GLOBE_SHARE * rect.width().min(rect.height());
             if let Err(error) = fit(map, at, wanted, rect) {
@@ -298,7 +331,8 @@ impl EclipseApp {
 /// not grow as 2^zoom, since the camera comes closer as it zooms, so each round takes the
 /// slope of log radius over zoom from the last two.
 fn fit(map: &mut MapView, at: LatLon, wanted: f32, rect: egui::Rect) -> Result<(), MapError> {
-    let mut zoom = map.zoom();
+    // From the ground the camera's zoom is far past any that shows the whole globe.
+    let mut zoom = map.zoom().clamp(-1.0, 4.0);
     let mut last: Option<(f64, f64)> = None;
     for _ in 0..12 {
         map.look_at(at.lat, at.lon, zoom)?;
@@ -353,6 +387,12 @@ fn gestures(ui: &egui::Ui, response: &egui::Response, map: &MapView, rect: egui:
 
 impl eframe::App for EclipseApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        if let Some(finder) = &mut self.finder
+            && !finder.done()
+        {
+            finder.step();
+            ui.ctx().request_repaint();
+        }
         egui::Panel::left("panel")
             .resizable(false)
             .exact_size(340.0)

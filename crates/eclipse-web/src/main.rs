@@ -10,6 +10,8 @@ mod export;
 #[cfg(target_arch = "wasm32")]
 mod figure;
 #[cfg(target_arch = "wasm32")]
+mod finder;
+#[cfg(target_arch = "wasm32")]
 mod globe;
 #[cfg(target_arch = "wasm32")]
 mod map;
@@ -21,6 +23,8 @@ mod palette;
 mod panel;
 #[cfg(target_arch = "wasm32")]
 mod selection;
+#[cfg(target_arch = "wasm32")]
+mod sky;
 #[cfg(target_arch = "wasm32")]
 mod web;
 

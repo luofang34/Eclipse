@@ -23,9 +23,11 @@ use thiserror::Error;
 
 mod frames;
 mod gestures;
+mod sky;
 mod style;
 
 pub use gestures::Gesture;
+pub use sky::{GLOBE_FIELD_OF_VIEW, SkyFrame};
 
 /// Why the globe could not be created or drawn.
 #[derive(Debug, Error)]
@@ -86,6 +88,7 @@ impl MapView {
             Box::new(maplibre::vector::VectorPlugin::<
                 maplibre::vector::DefaultVectorTransferables,
             >::default()),
+            Box::new(maplibre::starfield::StarfieldPlugin),
         ];
         let mut map =
             HeadlessMap::new(style, renderer, kernel, plugins).map_err(MapError::Assemble)?;
@@ -186,11 +189,17 @@ impl MapView {
 impl Projector {
     /// Where `(lat, lon)` on the sea-level globe shows, or `None` behind it or off the view.
     pub fn project(&self, lat: f64, lon: f64) -> Option<Pos2> {
+        self.project_at(lat, lon, 0.0)
+    }
+
+    /// Where the point `meters` above sea level at `(lat, lon)` shows, or `None` hidden or
+    /// off the view.
+    pub fn project_at(&self, lat: f64, lon: f64, meters: f64) -> Option<Pos2> {
         let target = target_view(
             &self.camera,
             None,
             LatLon::new(lat, lon),
-            TargetAltitude::Drawn { meters: 0.0 },
+            TargetAltitude::Drawn { meters },
         );
         if target.visibility != Visibility::Visible {
             return None;
