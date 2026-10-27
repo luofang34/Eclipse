@@ -189,6 +189,7 @@ impl EclipseApp {
             return;
         };
         let (start, end) = selected.span();
+        let mut export = false;
         ui.horizontal(|ui| {
             let label = if self.playing { "⏸" } else { "▶" };
             if ui.button(label).clicked() {
@@ -201,6 +202,10 @@ impl EclipseApp {
                 self.now_tt = selected.greatest_tt();
                 self.playing = false;
             }
+            export = ui
+                .button("Save SVG")
+                .on_hover_text("Save this eclipse as an animated SVG")
+                .clicked();
             ui.label(panel::times(self.now_tt));
             ui.spacing_mut().slider_width = (ui.available_width() - 20.0).max(100.0);
             let slider = egui::Slider::new(&mut self.now_tt, start..=end).show_value(false);
@@ -208,6 +213,10 @@ impl EclipseApp {
                 self.playing = false;
             }
         });
+        if export && let Err(error) = crate::export::save(selected) {
+            tracing::error!(%error, "SVG export");
+            self.error = Some(error);
+        }
         if self.playing {
             self.now_tt += PLAY_RATE * f64::from(ui.input(|input| input.stable_dt.min(0.1)));
             if self.now_tt >= end {

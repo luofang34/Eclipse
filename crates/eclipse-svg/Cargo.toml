@@ -1,0 +1,17 @@
+[package]
+name = "eclipse-svg"
+description = "Animated SVG maps of solar and lunar eclipses"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+license.workspace = true
+
+[dependencies]
+eclipse-core = { path = "../eclipse-core" }
+
+[dev-dependencies]
+roxmltree = "0.21"
+
+[lints]
+workspace = true

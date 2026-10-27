@@ -3,8 +3,7 @@
 
 use serde_json::{Value, json};
 
-const LAND: &str = include_str!("../../assets/land.geojson");
-const BORDERS: &str = include_str!("../../assets/borders.geojson");
+use crate::basemap::{BORDERS, LAND};
 
 /// The basemap as a MapLibre style document.
 pub(super) fn basemap() -> Result<Value, serde_json::Error> {

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/eclipse-core", "crates/eclipse-web"]
+members = ["crates/eclipse-core", "crates/eclipse-svg", "crates/eclipse-web"]
 
 [workspace.package]
 version = "0.1.0"

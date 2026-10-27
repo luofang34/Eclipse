@@ -4,6 +4,10 @@
 #[cfg(target_arch = "wasm32")]
 mod app;
 #[cfg(target_arch = "wasm32")]
+mod basemap;
+#[cfg(target_arch = "wasm32")]
+mod export;
+#[cfg(target_arch = "wasm32")]
 mod figure;
 #[cfg(target_arch = "wasm32")]
 mod globe;

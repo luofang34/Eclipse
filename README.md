@@ -10,6 +10,8 @@ through the Earth's shadow and where on Earth the eclipse is seen.
 - `crates/eclipse-core`: the eclipses, from the Sun and Moon of
   [Navigate](https://github.com/luofang34/Navigate)'s `navigate-celestial`, with Besselian
   geometry, the Canon's lunar radii and Danjon's shadow enlargement.
+- `crates/eclipse-svg`: the maps as animated SVG files (SMIL), on an orthographic globe
+  centred on greatest eclipse, or the lunar figure with the Moon moving through the shadow.
 - `crates/eclipse-web`: the page, drawn on the globe of the
   [MapLibre fork](https://github.com/luofang34/maplibre-rs-experimental) with egui.
 
@@ -21,15 +23,16 @@ The page needs the `wasm32-unknown-unknown` target, [trunk](https://trunkrs.dev)
     cd crates/eclipse-web
     trunk serve            # or: trunk build --release
 
-`?date=YYYY-MM-DD` opens the eclipse of that date.
+`?date=YYYY-MM-DD` opens the eclipse of that date. **Save SVG** in the time bar saves the
+eclipse on show as an animated SVG.
 
 ## Checks
 
     cargo fmt --check
-    cargo clippy -p eclipse-core --all-targets -- -D warnings
+    cargo clippy -p eclipse-core -p eclipse-svg --all-targets -- -D warnings
     cargo clippy -p eclipse-web --target wasm32-unknown-unknown --all-targets -- -D warnings
-    cargo test -p eclipse-core --release
-    RUSTDOCFLAGS="-D missing_docs -D broken_intra_doc_links" cargo doc -p eclipse-core --no-deps
+    cargo test -p eclipse-core -p eclipse-svg --release
+    RUSTDOCFLAGS="-D missing_docs -D broken_intra_doc_links" cargo doc -p eclipse-core -p eclipse-svg --no-deps
     scripts/check-structure.sh
 
 The tests compare every eclipse of the Canons from 1850 to 2099, two published paths, and
