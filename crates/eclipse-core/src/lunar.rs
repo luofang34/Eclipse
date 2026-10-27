@@ -6,7 +6,7 @@ use navigate_celestial::DeltaT;
 use crate::{
     EclipseError, Track,
     besselian::{K_PENUMBRA, SUN_RADIUS},
-    geodesy::{LatLon, cross, dot, norm, scale, sub, surface, unit, up},
+    geodesy::{LatLon, cross, dot, norm, overhead, scale, sub, surface, unit, up},
     saros,
     solar::golden_min,
     time,
@@ -224,11 +224,7 @@ impl LunarEclipse {
 
     /// Where the Moon stands overhead at `jd_tt`.
     pub fn sublunar(&self, jd_tt: f64) -> Result<LatLon, EclipseError> {
-        let moon = unit(self.track.at(jd_tt)?.moon);
-        Ok(LatLon {
-            lat: moon[2].asin().to_degrees(),
-            lon: moon[1].atan2(moon[0]).to_degrees(),
-        })
+        Ok(overhead(self.track.at(jd_tt)?.moon))
     }
 
     /// The share of the eclipse, from the Moon entering the penumbra to leaving it, during

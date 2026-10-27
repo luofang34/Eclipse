@@ -59,3 +59,34 @@ fn show_status(message: &str) {
         status.set_text_content(Some(message));
     }
 }
+
+/// The Julian date now, by the browser's clock; close enough to TT to pick an eclipse.
+pub(crate) fn today_jd() -> f64 {
+    let seconds = web_time::SystemTime::now()
+        .duration_since(web_time::UNIX_EPOCH)
+        .map_or(0.0, |elapsed| elapsed.as_secs_f64());
+    2_440_587.5 + seconds / eclipse_core::time::SECONDS_PER_DAY
+}
+
+/// The `date` the page's query names, as `YYYY-MM-DD`.
+pub(crate) fn query_date() -> Option<String> {
+    let search = web_sys::window()?.location().search().ok()?;
+    search
+        .trim_start_matches('?')
+        .split('&')
+        .find_map(|pair| pair.strip_prefix("date="))
+        .filter(|date| date.len() == 10)
+        .map(str::to_owned)
+}
+
+/// Puts `date` in the page's address, so the view can be shared.
+pub(crate) fn show_date(date: &str) {
+    let Some(history) = web_sys::window().and_then(|window| window.history().ok()) else {
+        return;
+    };
+    let url = format!("?date={date}");
+    if let Err(error) = history.replace_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&url))
+    {
+        tracing::warn!(?error, "address not updated");
+    }
+}

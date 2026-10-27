@@ -51,6 +51,15 @@ pub fn altitude(at: LatLon, body: [f64; 3]) -> f64 {
         .to_degrees()
 }
 
+/// Where the body at `body` stands overhead: the point whose upward normal points at it.
+pub fn overhead(body: [f64; 3]) -> LatLon {
+    let d = norm(body);
+    LatLon {
+        lat: (body[2] / d).clamp(-1.0, 1.0).asin().to_degrees(),
+        lon: body[1].atan2(body[0]).to_degrees(),
+    }
+}
+
 /// Great-circle distance in kilometres on the mean sphere.
 pub fn distance_km(a: LatLon, b: LatLon) -> f64 {
     let (u, v) = (up(a), up(b));

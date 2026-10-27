@@ -10,7 +10,7 @@ use super::{SolarEclipse, trace};
 use crate::{
     EclipseError,
     besselian::{Cone, Elements},
-    geodesy::{LatLon, cross, dot, lat_lon, sub},
+    geodesy::{LatLon, cross, dot, lat_lon, overhead, sub},
 };
 
 /// The half-interval of the time differences that find where points stop entering, days.
@@ -73,7 +73,7 @@ impl SolarEclipse {
                 let e = self.elements(t)?;
                 Ok(e.surface(e.x, e.y).into_iter().collect())
             })?,
-            subsolar: subsolar(e.sun),
+            subsolar: overhead(e.sun),
         })
     }
 
@@ -207,15 +207,6 @@ fn outline_maxima(eclipse: &SolarEclipse, jd_tt: f64) -> Result<Vec<[f64; 3]>, E
             .then(|| after.shadow(p).magnitude() - before.shadow(p).magnitude())
     });
     Ok(roots.into_iter().map(|theta| now.outline(theta)).collect())
-}
-
-/// The subsolar point: where the ellipsoid's normal points at the Sun.
-fn subsolar(sun: [f64; 3]) -> LatLon {
-    let distance = crate::geodesy::norm(sun);
-    LatLon {
-        lat: (sun[2] / distance).asin().to_degrees(),
-        lon: sun[1].atan2(sun[0]).to_degrees(),
-    }
 }
 
 fn to_lat_lon(curves: Vec<Vec<[f64; 3]>>) -> Vec<Vec<LatLon>> {

@@ -131,6 +131,16 @@ impl MapView {
             .map_err(MapError::Navigation)
     }
 
+    /// The camera's zoom.
+    pub fn zoom(&self) -> f64 {
+        self.map.view_state().zoom().value()
+    }
+
+    /// Whether the map has work for another frame, such as data still arriving.
+    pub fn needs_redraw(&self) -> bool {
+        self.map.needs_redraw()
+    }
+
     /// Queues a viewer gesture for the next frame.
     pub fn gesture(&self, gesture: Gesture) {
         self.gestures.push(gesture);
@@ -148,7 +158,19 @@ impl MapView {
     /// Projects through the displayed frame's camera into `rect`, the screen area the
     /// texture fills.
     pub fn projector(&self, rect: Rect) -> Option<Projector> {
-        let view = self.frames.view()?;
+        self.projector_through(self.frames.view()?, rect)
+    }
+
+    /// Projects through the camera as it now stands, before a frame draws it.
+    pub fn projector_now(&self, rect: Rect) -> Option<Projector> {
+        self.projector_through(self.map.view_state(), rect)
+    }
+
+    fn projector_through(
+        &self,
+        view: &maplibre::render::view_state::ViewState,
+        rect: Rect,
+    ) -> Option<Projector> {
         let camera = globe_camera_for_view(view).ok()?;
         // The camera works in logical pixels: physical ones over the pixel ratio.
         let logical = self.size[0].max(1) as f32 / self.pixel_ratio as f32;
@@ -178,6 +200,33 @@ impl Projector {
             self.rect.min.x + pixel.x as f32 * self.scale,
             self.rect.min.y + pixel.y as f32 * self.scale,
         ))
+    }
+
+    /// The globe's radius on screen in points: how far from `centre` the edge of the
+    /// globe shows, found along the great circle toward the equator.
+    pub fn globe_radius(&self, centre: (f64, f64)) -> Option<f32> {
+        let (lat, lon) = centre;
+        let from = eclipse_core::geodesy::LatLon { lat, lon };
+        let bearing = if lat > 0.0 { 180.0 } else { 0.0 };
+        let at = |angle: f64| {
+            let p = crate::overlay::destination(from, bearing, angle);
+            self.project(p.lat, p.lon)
+        };
+        let middle = at(0.0)?;
+        let (mut seen, mut hidden) = (0.0, 90.0);
+        if at(hidden).is_some() {
+            seen = hidden;
+        } else {
+            for _ in 0..20 {
+                let angle = 0.5 * (seen + hidden);
+                if at(angle).is_some() {
+                    seen = angle
+                } else {
+                    hidden = angle
+                }
+            }
+        }
+        Some(at(seen)?.distance(middle))
     }
 
     /// The geographic position under a screen point, or `None` off the globe.

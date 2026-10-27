@@ -16,7 +16,7 @@ mod map;
 mod trace;
 
 pub use local::{Contact, LocalSolar};
-pub use map::SolarMap;
+pub use map::{ShadowOutline, SolarMap};
 
 /// Half the span sampled around greatest eclipse, days; the penumbra crosses the Earth in
 /// at most about six and a half hours.

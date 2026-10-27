@@ -4,7 +4,19 @@
 #[cfg(target_arch = "wasm32")]
 mod app;
 #[cfg(target_arch = "wasm32")]
+mod figure;
+#[cfg(target_arch = "wasm32")]
+mod globe;
+#[cfg(target_arch = "wasm32")]
 mod map;
+#[cfg(target_arch = "wasm32")]
+mod overlay;
+#[cfg(target_arch = "wasm32")]
+mod palette;
+#[cfg(target_arch = "wasm32")]
+mod panel;
+#[cfg(target_arch = "wasm32")]
+mod selection;
 #[cfg(target_arch = "wasm32")]
 mod web;
 
