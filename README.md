@@ -32,7 +32,8 @@ The page needs the `wasm32-unknown-unknown` target, [trunk](https://trunkrs.dev)
     RUSTDOCFLAGS="-D missing_docs -D broken_intra_doc_links" cargo doc -p eclipse-core --no-deps
     scripts/check-structure.sh
 
-The tests compare every eclipse of the Canons from 1850 to 2099 and two published paths.
+The tests compare every eclipse of the Canons from 1850 to 2099, two published paths, and
+totality as observers timed it at Königsberg in 1851 and at Sobral and Príncipe in 1919.
 Their fixtures come from NASA's pages through `tools/canon_fixture.py`; the basemap's
 coastlines and borders come from Natural Earth through `tools/natural_earth.py`.
 
