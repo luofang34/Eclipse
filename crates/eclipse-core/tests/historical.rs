@@ -1,10 +1,10 @@
-//! Totality as observers timed it at historic eclipses, against the duration computed at
+//! Totality as historic eclipse expeditions recorded it, against the duration computed at
 //! their stations. The Canon tests compare with NASA's computed eclipses; these compare
-//! with what was seen.
+//! with the durations the observers reported.
 
 use eclipse_core::{SolarEclipse, geodesy::LatLon, time::CalendarTime};
 
-/// A timed observation: the eclipse's date, the station and the totality recorded there.
+/// A recorded duration: the eclipse's date, the station and the totality reported there.
 struct Observed {
     date: (i32, u8, u8),
     station: &'static str,
@@ -57,7 +57,7 @@ const OBSERVED: [Observed; 3] = [
 ];
 
 #[test]
-fn totality_as_observers_timed_it() {
+fn totality_as_the_expeditions_recorded_it() {
     let mut failures = Vec::new();
     for observed in &OBSERVED {
         let (year, month, day) = observed.date;

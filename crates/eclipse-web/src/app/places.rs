@@ -95,7 +95,9 @@ impl EclipseApp {
                 }
             }
             if let Some(at) = self.local.as_ref().map(Local::at)
-                && ui.button("Find eclipses seen here").clicked()
+                && ui
+                    .button(format!("Find eclipses seen here from {}", self.year))
+                    .clicked()
             {
                 self.finder = Some(Finder::new(at, self.year));
             }

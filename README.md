@@ -27,7 +27,7 @@ The page needs the `wasm32-unknown-unknown` target, [trunk](https://trunkrs.dev)
 eclipse on show as an animated SVG.
 
 Under **A place**, type a latitude and longitude or pick a city to see the eclipse from
-there; **Find eclipses seen here** lists the next ones visible from it. **Stand at greatest
+there; **Find eclipses seen here** lists the next ones visible from it, from the year on show. **Stand at greatest
 eclipse**, **Stand under the Moon** and **See the sky from this place** fly down to stand on
 the ground and watch the Sun or the Moon, with Navigate's Sun, its Moon as seen from that
 place, and its stars, drawn by the MapLibre fork's sky. Drag to look around and scroll to
@@ -43,7 +43,8 @@ change the field of view.
     scripts/check-structure.sh
 
 The tests compare every eclipse of the Canons from 1850 to 2099, two published paths, and
-totality as observers timed it at Königsberg in 1851 and at Sobral and Príncipe in 1919.
+totality as the expeditions recorded it at Königsberg in 1851 and at Sobral and Príncipe in
+1919.
 Their fixtures come from NASA's pages through `tools/canon_fixture.py`; the basemap's
 coastlines and borders come from Natural Earth through `tools/natural_earth.py`.
 

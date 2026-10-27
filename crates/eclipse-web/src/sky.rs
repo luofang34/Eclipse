@@ -47,6 +47,8 @@ pub(crate) struct SkyView {
     pub(crate) field_of_view: f64,
     /// The body the view keeps centred, until the viewer looks away.
     pub(crate) follow: Option<Body>,
+    /// The Sun and Moon last drawn, for the panel's account.
+    pub(crate) shown: Option<SkyFrame>,
     flight: Option<Flight>,
     stars_at: Option<f64>,
 }
@@ -70,6 +72,7 @@ impl SkyView {
                 from,
                 started_s: None,
             }),
+            shown: None,
             stars_at: None,
         }
     }

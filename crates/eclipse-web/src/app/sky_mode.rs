@@ -50,6 +50,10 @@ impl EclipseApp {
             moon: frame.moon.filter(|_| !solar),
             ..frame.clone()
         }));
+        view.shown = Some(crate::map::SkyFrame {
+            stars: None,
+            ..frame.clone()
+        });
         let mut waiting = false;
         match map.frame() {
             Ok(Some(texture)) => {
@@ -80,8 +84,12 @@ impl EclipseApp {
     pub(super) fn sky_panel(&mut self, ui: &mut egui::Ui) {
         let Some(view) = &mut self.sky else { return };
         ui.label(RichText::new(format!("Standing at {}", panel::position(view.site))).strong());
-        let frame = view.sky(self.now_tt);
-        for (name, body) in [("Sun", frame.sun), ("Moon", frame.moon)] {
+        // The globe draws after the panel, so this is the last frame's sky.
+        let (sun, moon) = view
+            .shown
+            .as_ref()
+            .map_or((None, None), |f| (f.sun, f.moon));
+        for (name, body) in [("Sun", sun), ("Moon", moon)] {
             if let Some((direction, _)) = body {
                 let [azimuth, elevation] = sky::horizontal(view.site, direction);
                 ui.label(format!("{name}: {elevation:.1}° up, azimuth {azimuth:.0}°"));
