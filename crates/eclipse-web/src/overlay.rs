@@ -130,7 +130,7 @@ pub(crate) fn shade_grid(
             }
         }
     }
-    painter.add(Shape::mesh(mesh));
+    add_mesh(painter, mesh);
 }
 
 /// Shades the half of the globe more than 90° from `centre`, as night is from the subsolar
@@ -184,7 +184,15 @@ pub(crate) fn shade_far_side(
             }
         }
     }
-    painter.add(Shape::mesh(mesh));
+    add_mesh(painter, mesh);
+}
+
+/// Adds `mesh` unless it has no triangle: close in, the grid's points can stand on screen
+/// with no whole cell among them, and the painter rejects a mesh of vertices alone.
+fn add_mesh(painter: &Painter, mesh: Mesh) {
+    if !mesh.indices.is_empty() {
+        painter.add(Shape::mesh(mesh));
+    }
 }
 
 /// The great circle 90° from `centre`, where a body overhead at `centre` is on the horizon.
