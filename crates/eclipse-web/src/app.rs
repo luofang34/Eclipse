@@ -210,9 +210,10 @@ impl EclipseApp {
         self.places_panel(ui);
         ui.separator();
         ui.small(
-            "Sun and Moon from Navigate's analytic ephemeris; ΔT from IERS and USNO data. \
-             Shadows and lunar radii as in NASA's Five Millennium Canons (Espenak and Meeus). \
-             Coastlines and borders: Natural Earth.",
+            "Sun and Moon from Navigate's analytic series, fitted to JPL DE431; ΔT from \
+             Stephenson, Morrison and Hohenkerk (2016) before 1948 and from USNO and IERS \
+             data since, modelled beyond them. Shadows and lunar radii as in NASA's Five \
+             Millennium Canons (Espenak and Meeus). Coastlines and borders: Natural Earth.",
         );
     }
 
