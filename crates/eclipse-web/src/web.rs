@@ -2,6 +2,8 @@
 
 use wasm_bindgen::JsCast;
 
+mod runtime;
+
 /// The canvas `index.html` provides.
 const CANVAS_ID: &str = "eclipse";
 
@@ -33,22 +35,17 @@ async fn run() -> Result<(), String> {
         .get_element_by_id(CANVAS_ID)
         .and_then(|element| element.dyn_into::<web_sys::HtmlCanvasElement>().ok())
         .ok_or("the page has no canvas")?;
-    let options = eframe::WebOptions {
-        wgpu_options: crate::app::gpu_configuration(),
-        ..Default::default()
-    };
-    eframe::WebRunner::new()
-        .start(
-            canvas,
-            options,
-            Box::new(|cc| Ok(Box::new(crate::app::EclipseApp::new(cc)?))),
-        )
-        .await
-        .map_err(|error| format!("{error:?}"))?;
-    if let Some(status) = document.get_element_by_id("status") {
+    runtime::run(canvas).await
+}
+
+/// Takes the loading notice off the page once the App draws.
+fn page_started() {
+    if let Some(status) = web_sys::window()
+        .and_then(|window| window.document())
+        .and_then(|document| document.get_element_by_id("status"))
+    {
         status.remove();
     }
-    Ok(())
 }
 
 fn show_status(message: &str) {

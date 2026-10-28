@@ -895,6 +895,7 @@ dependencies = [
  "eclipse-svg",
  "eframe",
  "egui-wgpu",
+ "futures-channel",
  "js-sys",
  "maplibre",
  "navigate-celestial",

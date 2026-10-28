@@ -83,6 +83,11 @@ impl SkyView {
         }
     }
 
+    /// Sends the stars again with the next frame, to a renderer that has none.
+    pub(crate) fn resend_stars(&mut self) {
+        self.stars_at = None;
+    }
+
     /// Whether the camera is still on its way down.
     pub(crate) fn flying(&self) -> bool {
         self.flight.is_some()

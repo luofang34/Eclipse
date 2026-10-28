@@ -4,6 +4,7 @@
 use eclipse_core::{Eclipse, eclipses_in_year, geodesy::LatLon, time::CalendarTime};
 use eframe::egui::{self, Color32, Sense};
 use egui_wgpu::{WgpuConfiguration, WgpuSetupCreateNew};
+use maplibre::render::view_state::GlobePose;
 
 use crate::{
     figure,
@@ -46,6 +47,8 @@ pub(crate) struct EclipseApp {
     error: Option<String>,
     /// Where the globe turns to once it can.
     look: Option<LatLon>,
+    /// The camera a rebuilt globe takes over from the one the GPU lost.
+    restored_pose: Option<GlobePose>,
     /// The view from the ground, while the eye stands there.
     sky: Option<SkyView>,
     /// The search for eclipses seen from a place.
@@ -87,6 +90,7 @@ impl EclipseApp {
             local: None,
             error: None,
             look: None,
+            restored_pose: None,
             sky: None,
             finder: None,
             place_text: String::new(),
@@ -255,6 +259,21 @@ impl EclipseApp {
         }
     }
 
+    /// Moves the App onto `host`, the page's new GPU after the old one was lost, keeping the
+    /// eclipse, the time, the place and the camera on show.
+    pub(crate) fn restore_gpu(
+        &mut self,
+        cc: &eframe::CreationContext<'_>,
+        host: egui_wgpu::RenderState,
+    ) {
+        cc.egui_ctx.set_visuals(egui::Visuals::light());
+        self.restored_pose = self.map.take().and_then(|map| map.pose());
+        self.host = host;
+        if let Some(sky) = &mut self.sky {
+            sky.resend_stars();
+        }
+    }
+
     fn globe(&mut self, ui: &mut egui::Ui) {
         let rect = ui.available_rect_before_wrap();
         let ppp = ui.ctx().pixels_per_point();
@@ -264,7 +283,14 @@ impl EclipseApp {
         ];
         if self.map.is_none() {
             match MapView::new(size, &self.host) {
-                Ok(map) => self.map = Some(map),
+                Ok(mut map) => {
+                    if let Some(pose) = self.restored_pose.take()
+                        && let Err(error) = map.set_pose(pose)
+                    {
+                        tracing::warn!(%error, "globe camera not restored");
+                    }
+                    self.map = Some(map);
+                }
                 Err(error) => {
                     tracing::error!(%error, "globe unavailable");
                     ui.label(format!("The globe could not start: {error}"));
