@@ -15,7 +15,7 @@ use crate::{
 };
 
 /// The years Navigate's Sun and Moon cover.
-pub(crate) const YEARS: std::ops::RangeInclusive<i32> = 1800..=2199;
+pub(crate) const YEARS: std::ops::RangeInclusive<i32> = -1999..=2999;
 
 /// What the viewer asked for in the panel.
 pub(crate) enum Action {
@@ -44,6 +44,10 @@ pub(crate) fn year_list(
         }
         if ui.button("▶").clicked() && year < *YEARS.end() {
             action = Some(Action::Year(year + 1));
+        }
+        // Astronomical years count a year 0, which is 1 BCE.
+        if year <= 0 {
+            ui.label(format!("{} BCE", 1 - year));
         }
     });
     for (index, eclipse) in list.iter().enumerate() {
@@ -307,7 +311,7 @@ fn delta_t(tt: f64) -> String {
         DeltaTBasis::Observed => "observed",
         DeltaTBasis::Predicted => "IERS prediction",
         DeltaTBasis::Extrapolated => "extrapolated",
-        DeltaTBasis::Modelled => "Espenak–Meeus model",
+        DeltaTBasis::Modelled => "modelled",
     };
     format!(
         "{:.1} s ± {:.1} ({basis})",

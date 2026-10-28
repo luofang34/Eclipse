@@ -13,8 +13,9 @@ pub(crate) const EYE_HEIGHT_M: f64 = 2.0;
 const STANDING_TARGET_M: f64 = 1000.0;
 /// Below this the view would look into the ground, where the pose's target cannot stand.
 const LOWEST_ELEVATION: f64 = 0.0;
-/// Short of the zenith, where the frame's up is undefined.
-const HIGHEST_ELEVATION: f64 = 89.5;
+/// Short of the zenith, where the frame's up is undefined; a Moon overhead stays within
+/// 40 arcseconds of the frame's centre.
+const HIGHEST_ELEVATION: f64 = 89.99;
 
 /// A free-globe camera pose, as the renderer stores it.
 #[derive(Clone, Copy, Debug, PartialEq)]

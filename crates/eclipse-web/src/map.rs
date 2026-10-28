@@ -27,7 +27,7 @@ mod sky;
 mod style;
 
 pub use gestures::Gesture;
-pub use sky::{GLOBE_FIELD_OF_VIEW, SkyFrame};
+pub use sky::{GLOBE_FIELD_OF_VIEW, ShadowFrame, SkyFrame};
 
 /// Why the globe could not be created or drawn.
 #[derive(Debug, Error)]

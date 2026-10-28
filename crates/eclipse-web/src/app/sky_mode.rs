@@ -43,13 +43,8 @@ impl EclipseApp {
         if let Err(error) = map.set_pose(pose) {
             tracing::error!(%error, "standing pose");
         }
-        // A new Moon lit only by earthshine would show against the daylit sky; its
-        // silhouette on the Sun is drawn over the frame instead.
-        let solar = matches!(selected, crate::selection::Selected::Solar { .. });
-        map.set_sky(Some(crate::map::SkyFrame {
-            moon: frame.moon.filter(|_| !solar),
-            ..frame.clone()
-        }));
+        let frame = sky::with_eclipse(frame, view.site, selected, self.now_tt);
+        map.set_sky(Some(frame.clone()));
         view.shown = Some(crate::map::SkyFrame {
             stars: None,
             ..frame.clone()
@@ -67,15 +62,7 @@ impl EclipseApp {
             && let Some(projector) = map.projector(rect)
         {
             let painter = ui.painter_at(rect);
-            sky::draw(
-                &painter,
-                &projector,
-                rect,
-                view,
-                &frame,
-                selected,
-                self.now_tt,
-            );
+            sky::draw(&painter, &projector, view);
         }
         moved || waiting || view.flying() || map.needs_redraw()
     }

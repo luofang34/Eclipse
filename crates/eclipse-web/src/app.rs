@@ -69,7 +69,10 @@ impl EclipseApp {
         let wanted = web::query_date();
         let year = wanted
             .as_deref()
-            .and_then(|date| date.get(..4)?.parse().ok())
+            .and_then(|date| {
+                let year: i32 = date.trim_start_matches('-').get(..4)?.parse().ok()?;
+                Some(if date.starts_with('-') { -year } else { year })
+            })
             .unwrap_or(CalendarTime::from_jd(today).year)
             .clamp(*panel::YEARS.start(), *panel::YEARS.end());
         let mut app = Self {
@@ -162,7 +165,8 @@ impl EclipseApp {
     fn side_panel(&mut self, ui: &mut egui::Ui) {
         ui.add_space(6.0);
         ui.label(egui::RichText::new("Eclipse Maps").heading().strong());
-        ui.label("Solar and lunar eclipses, 1800–2199");
+        ui.label("Solar and lunar eclipses, 2000 BCE to 2999");
+        ui.small("Dates before 1582 October 15 are Julian; years are astronomical, 0 = 1 BCE.");
         ui.separator();
         if let Some(action) = panel::year_list(ui, self.year, &self.list, self.index) {
             match action {

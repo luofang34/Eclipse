@@ -61,7 +61,7 @@ fn a_standing_eye_looks_where_it_is_told_with_the_horizon_level() {
         (39.04855, -77.11311, 92.175, 37.001),
         (65.2, -25.2, 248.0, 25.7),
         (-33.9, 18.4, 10.0, 0.0),
-        (6.4, -170.7, 7.0, 89.5),
+        (6.4, -170.7, 7.0, 89.99),
     ];
     for (lat, lon, azimuth, elevation) in views {
         let site = LatLon { lat, lon };

@@ -1,6 +1,6 @@
 # Eclipse Maps
 
-Solar and lunar eclipse maps in the browser, for every eclipse from 1800 to 2199, after the
+Solar and lunar eclipse maps in the browser, for every eclipse from 2000 BCE to 2999, after the
 maps of NASA's *Five Millennium Canons* (Espenak and Meeus). A solar eclipse shows its
 penumbral limits, where it begins, ends and is greatest at sunrise and sunset, the curves of
 magnitude 0.5, the path of totality or annularity, the shadow and the night side at any

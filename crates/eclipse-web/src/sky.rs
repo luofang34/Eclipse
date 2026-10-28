@@ -15,8 +15,10 @@ use crate::{
 };
 
 mod drawing;
+mod eclipse;
 
 pub(crate) use drawing::draw;
+pub(crate) use eclipse::with_eclipse;
 
 /// How long the flight down from the globe takes, seconds, as Sokoly-Demos' sky cases fly in.
 const FLIGHT_S: f64 = 6.0;
@@ -184,6 +186,7 @@ impl SkyView {
                 .ok()
                 .map(sight),
             stars,
+            ..SkyFrame::default()
         }
     }
 }
