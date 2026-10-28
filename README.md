@@ -44,9 +44,12 @@ CI runs the first two on every pull request and on main, and the third weekly.
 The tests compare every eclipse of the Canons from 1800 to 2199, the Besselian elements and
 paths NASA published for 2026, and totality as the expeditions recorded it at Königsberg in
 1851 and at Sobral and Príncipe in 1919. With the `long-range` feature, which takes
-Navigate's Sun and Moon from -2000 to 3000, they compare every eclipse of the Canons from
--1999 to 2999 and the records of Bur-Sagale (-762), Thales (-584), Babylon (-135),
-Columbus (1504) and Halley (1715); dates before 1582 October 15 are Julian.
+Navigate's Sun and Moon from -2000 to 3000 fitted to JPL DE431, they compare every eclipse
+of the Canons from -1999 to 2999; the records of Bur-Sagale (-762), Thales (-584), Babylon
+(-135), Columbus (1504) and Halley (1715); the ranges of Delta T over which the untimed
+total eclipses of Stephenson, Morrison and Hohenkerk (2016) put each place in the path; and
+the contacts observers timed in 1851, 1878, 1900 and 1927. Dates before 1582 October 15
+are Julian.
 Their fixtures come from NASA's pages through `tools/canon_fixture.py`; the basemap's
 coastlines and borders come from Natural Earth through `tools/natural_earth.py`.
 

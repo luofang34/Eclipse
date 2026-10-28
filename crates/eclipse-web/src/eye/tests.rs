@@ -169,6 +169,11 @@ fn sokoly_demos_sunshine_and_moonlight() {
         let [sphere_azimuth, sphere_elevation] = on_sphere(site, direction);
         let pose = standing(site, sphere_azimuth, sphere_elevation, RADIUS);
         let (_, forward) = eye_and_forward(&pose, RADIUS);
-        assert!(angle(forward, globe_world(direction)) < 1e-6, "{name}");
+        // Sunshine's Sun stands on the horizon, where the gaze stops.
+        let clamped = (sphere_elevation - standing_elevation(sphere_elevation)).abs();
+        assert!(
+            angle(forward, globe_world(direction)) < clamped + 1e-6,
+            "{name}"
+        );
     }
 }

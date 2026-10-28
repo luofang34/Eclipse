@@ -8,7 +8,11 @@
 //! does not depend on Delta T; a larger Delta T only turns the Earth less under it.
 #![cfg(feature = "long-range")]
 
-use eclipse_core::{LunarEclipse, SolarEclipse, geodesy::LatLon, time::CalendarTime};
+use eclipse_core::{
+    EARTH_RADIUS_M, LunarEclipse, SolarEclipse,
+    geodesy::{LatLon, surface},
+    time::{CalendarTime, tt_epoch},
+};
 
 /// The Earth turns 15.041 arcseconds in a second.
 const DEGREES_PER_SECOND: f64 = 15.041 / 3600.0;
@@ -111,9 +115,13 @@ fn babylon_in_totality() {
 }
 
 /// Halley at the Royal Society's house in Crane Court, London, 22 April 1715 Old Style
-/// (3 May Gregorian): the Sun was "totally obscured for 3',23'' of Time" (Phil. Trans. 29,
-/// 1714-1716). Delta T is then known to seconds, so the duration is compared as the 1851
-/// and 1919 timings are.
+/// (3 May Gregorian), by "a very good Pendulum Clock" checked against the Sun's altitude:
+/// "the total Immersion of the Sun, which hapened at 9h.9'.17''. by the Clock, or 9h.9'.3''.
+/// true time", and the emersion "at 9h.12'.26''. true time, after he had been totally
+/// obscured for 3',23'' of Time" (Phil. Trans. 29, 1714-1716). Delta T is then known to
+/// seconds, so the duration is compared as the 1851 and 1919 timings are. The contacts,
+/// timed to some ten seconds by a clock set on the Sun, guard against a gross error in the
+/// Earth's rotation then: the Delta T model is fitted to thousands of occultations instead.
 #[test]
 fn halley_in_london() {
     let e = SolarEclipse::near(CalendarTime::jd_at_midnight(1715, 5, 3) + 0.4)
@@ -127,6 +135,24 @@ fn halley_in_london() {
     let computed = seen.central_duration_s.unwrap();
     println!("1715 London: computed {computed:.1} s, Halley 203 s");
     assert!((computed - 203.0).abs() <= 5.0);
+    for (contact, observed) in [
+        (seen.c2, 9.0 + 9.0 / 60.0 + 3.0 / 3600.0),
+        (seen.c3, 9.0 + 12.0 / 60.0 + 26.0 / 3600.0),
+    ] {
+        let error = (apparent_time(crane_court, contact.unwrap().tt) - observed) * 3600.0;
+        println!("1715 London: contact {error:+.0} s from Halley's true time");
+        assert!(error.abs() <= 30.0);
+    }
+}
+
+/// Local apparent solar time at `site` and TT `jd`, hours: noon plus the Sun's hour angle.
+#[cfg(test)]
+fn apparent_time(site: LatLon, jd: f64) -> f64 {
+    let eye = surface(site).map(|c| c * EARTH_RADIUS_M);
+    let sun = navigate_celestial::sun_ecef_tt(tt_epoch(jd), Some(eye))
+        .unwrap()
+        .direction;
+    (12.0 + (site.lon - sun[1].atan2(sun[0]).to_degrees()) / 15.0).rem_euclid(24.0)
 }
 
 /// Columbus at Santa Gloria (St Ann's Bay), Jamaica, on the evening of 29 February 1504

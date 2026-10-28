@@ -12,7 +12,8 @@ navigate-celestial.workspace = true
 thiserror.workspace = true
 
 [features]
-# Navigate's Sun and Moon from -2000 to 3000, with the Canon's Delta T before 1800.
+# Navigate's Sun and Moon from -2000 to 3000, fitted to DE431, with the Delta T of
+# Stephenson, Morrison and Hohenkerk before 1948.
 long-range = ["navigate-celestial/long-range"]
 
 [lints]

@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use eclipse_core::{Eclipse, eclipses_in_year, time::CalendarTime};
+use eclipse_core::{Eclipse, eclipses_in_year};
 
 const SOLAR: &str = include_str!("fixtures/solar_catalogue.csv");
 const LUNAR: &str = include_str!("fixtures/lunar_catalogue.csv");
@@ -43,7 +43,9 @@ fn every_year_finds_the_catalogued_eclipses() {
             if !searched(catalogue::year(row[0])) {
                 continue;
             }
-            let key = format!("{} {body}", row[0]);
+            // Keyed by lunation: an eclipse the Canon's Moon times up to a minute apart
+            // from Navigate's may fall on the other side of midnight.
+            let key = format!("{} {body}", row[2]);
             expected.insert(key, (row[4].to_string(), at_threshold(body, &row)));
         }
     }
@@ -51,12 +53,16 @@ fn every_year_finds_the_catalogued_eclipses() {
     for year in (-1999..=2999).filter(|&y| searched(y)) {
         for e in eclipses_in_year(year).unwrap() {
             // A graze within the magnitudes' tolerance of 0 may be found or not.
-            let (body, code, graze) = match &e {
-                Eclipse::Solar(s) => ("solar", s.kind.code(), s.magnitude < 0.003),
-                Eclipse::Lunar(l) => ("lunar", l.kind.code(), l.penumbral_magnitude < 0.003),
+            let (body, code, graze, lunation) = match &e {
+                Eclipse::Solar(s) => ("solar", s.kind.code(), s.magnitude < 0.003, s.lunation),
+                Eclipse::Lunar(l) => (
+                    "lunar",
+                    l.kind.code(),
+                    l.penumbral_magnitude < 0.003,
+                    l.lunation,
+                ),
             };
-            let date = CalendarTime::from_jd(e.greatest_tt()).iso_date();
-            found.insert(format!("{date} {body}"), (code.to_string(), graze));
+            found.insert(format!("{lunation} {body}"), (code.to_string(), graze));
         }
     }
     let mut wrong = Vec::new();
