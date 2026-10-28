@@ -21,7 +21,10 @@ step cargo fmt --check
 step cargo clippy --locked -p eclipse-core -p eclipse-svg -p eclipse-web --all-targets -- -D warnings
 step cargo clippy --locked -p eclipse-core --all-targets --features long-range -- -D warnings
 step cargo clippy --locked -p eclipse-web --target wasm32-unknown-unknown --all-targets -- -D warnings
-step cargo test --locked -p eclipse-core -p eclipse-svg -p eclipse-web --release
+# eclipse-web turns on eclipse-core's long-range feature, which the long-range stage tests;
+# tested alone, eclipse-core keeps its default range.
+step cargo test --locked -p eclipse-core -p eclipse-svg --release
+step cargo test --locked -p eclipse-web --release
 RUSTDOCFLAGS="-D missing_docs -D broken_intra_doc_links" \
     step cargo doc --locked -p eclipse-core -p eclipse-svg --no-deps
 step cargo build --locked -p eclipse-web --target wasm32-unknown-unknown --release
