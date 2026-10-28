@@ -8,6 +8,11 @@ coordinates rounded to 0.02 degrees, about 2 km, finer than a globe-scale pixel.
 
 coast.geojson is the land's outline without the edges no shore makes: where a polygon
 is cut along the antimeridian, and where Antarctica's is closed across the pole.
+
+borders.geojson holds the boundaries Ukraine's worldview in Natural Earth (its FCLASS_UA
+field) draws between countries. It leaves out the line across the Perekop isthmus between
+Crimea and the mainland, and those around Somaliland, Western Sahara and Kosovo, which
+it does not recognise as borders.
 """
 import json
 import sys
@@ -41,9 +46,23 @@ def geometry(g):
     raise ValueError(f"unexpected geometry {kind}")
 
 
-def convert(source, target):
+# A boundary line's class in Ukraine's worldview, where it differs from the default.
+WORLDVIEW = "FCLASS_UA"
+# The classes of a line that is not a boundary between countries in that worldview.
+NOT_BETWEEN_COUNTRIES = {"Admin-1 boundary", "Unrecognized"}
+
+
+def between_countries(properties):
+    """Whether the worldview draws this boundary line between two countries."""
+    kind = properties.get(WORLDVIEW) or properties["FEATURECLA"]
+    return kind not in NOT_BETWEEN_COUNTRIES
+
+
+def convert(source, target, keep=lambda properties: True):
     features = []
     for f in json.loads(source.read_text())["features"]:
+        if not keep(f["properties"]):
+            continue
         g = geometry(f["geometry"])
         if g:
             features.append({"type": "Feature", "properties": {}, "geometry": g})
@@ -89,7 +108,11 @@ def main():
     src, dst = Path(sys.argv[1]), Path(sys.argv[2])
     convert(src / "ne_50m_land.geojson", dst / "land.geojson")
     coast(src / "ne_50m_land.geojson", dst / "coast.geojson")
-    convert(src / "ne_50m_admin_0_boundary_lines_land.geojson", dst / "borders.geojson")
+    convert(
+        src / "ne_50m_admin_0_boundary_lines_land.geojson",
+        dst / "borders.geojson",
+        between_countries,
+    )
 
 
 main()
