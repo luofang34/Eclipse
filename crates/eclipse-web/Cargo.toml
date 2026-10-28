@@ -10,6 +10,7 @@ license.workspace = true
 [dependencies]
 eclipse-core = { path = "../eclipse-core", features = ["long-range"] }
 eclipse-svg = { path = "../eclipse-svg" }
+natural-earth-50m = { path = "../natural-earth-50m" }
 navigate-celestial.workspace = true
 cgmath = "0.18"
 thiserror.workspace = true

@@ -2,7 +2,7 @@
 //! land polygons along the antimeridian or across the south pole, which the globe would draw
 //! as lines where there is no coast.
 
-const COAST: &str = include_str!("../assets/coast.geojson");
+use natural_earth_50m::COAST;
 
 #[test]
 fn the_coast_has_no_cut_edges() {

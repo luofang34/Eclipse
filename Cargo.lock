@@ -898,6 +898,7 @@ dependencies = [
  "futures-channel",
  "js-sys",
  "maplibre",
+ "natural-earth-50m",
  "navigate-celestial",
  "serde_json",
  "thiserror 2.0.21",
@@ -2829,6 +2830,13 @@ dependencies = [
  "num-traits",
  "simba",
  "typenum",
+]
+
+[[package]]
+name = "natural-earth-50m"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
 ]
 
 [[package]]

@@ -18,14 +18,14 @@ if [ "${1:-}" = "long-range" ]; then
 fi
 
 step cargo fmt --check
-step cargo clippy --locked -p eclipse-core -p eclipse-svg -p eclipse-web --all-targets -- -D warnings
+step cargo clippy --locked -p eclipse-core -p eclipse-svg -p eclipse-web -p natural-earth-50m --all-targets -- -D warnings
 step cargo clippy --locked -p eclipse-core --all-targets --features long-range -- -D warnings
 step cargo clippy --locked -p eclipse-web --target wasm32-unknown-unknown --all-targets -- -D warnings
 # eclipse-web turns on eclipse-core's long-range feature, which the long-range stage tests;
 # tested alone, eclipse-core keeps its default range.
-step cargo test --locked -p eclipse-core -p eclipse-svg --release
+step cargo test --locked -p eclipse-core -p eclipse-svg -p natural-earth-50m --release
 step cargo test --locked -p eclipse-web --release
 RUSTDOCFLAGS="-D missing_docs -D broken_intra_doc_links" \
-    step cargo doc --locked -p eclipse-core -p eclipse-svg --no-deps
+    step cargo doc --locked -p eclipse-core -p eclipse-svg -p natural-earth-50m --no-deps
 step cargo build --locked -p eclipse-web --target wasm32-unknown-unknown --release
 step scripts/check-structure.sh

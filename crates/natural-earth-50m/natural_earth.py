@@ -1,6 +1,6 @@
 """Writes the basemap's GeoJSON from Natural Earth (public domain).
 
-Usage: python3 -I tools/natural_earth.py NE_DIR crates/eclipse-web/assets
+Usage: python3 -I natural_earth.py NE_DIR data
 
 NE_DIR holds ne_50m_land.geojson and ne_50m_admin_0_boundary_lines_land.geojson
 from github.com/nvkelso/natural-earth-vector. Properties are dropped and

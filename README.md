@@ -51,7 +51,7 @@ total eclipses of Stephenson, Morrison and Hohenkerk (2016) put each place in th
 the contacts observers timed in 1851, 1878, 1900 and 1927. Dates before 1582 October 15
 are Julian.
 Their fixtures come from NASA's pages through `tools/canon_fixture.py`; the basemap's
-coastlines and borders come from Natural Earth through `tools/natural_earth.py`, the
+coastlines and borders come from Natural Earth through the `natural-earth-50m` crate, the
 borders as Ukraine's worldview in Natural Earth draws them.
 
 ## Licence

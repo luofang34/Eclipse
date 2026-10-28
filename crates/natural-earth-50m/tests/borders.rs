@@ -2,7 +2,7 @@
 //! between countries: none across the Perekop isthmus between Crimea and the mainland, while
 //! the Kerch Strait, between Crimea and Russia, keeps its line.
 
-const BORDERS: &str = include_str!("../assets/borders.geojson");
+use natural_earth_50m::BORDERS;
 
 /// Every vertex of the borders, as longitude and latitude.
 #[cfg(test)]

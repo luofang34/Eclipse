@@ -1,0 +1,18 @@
+[package]
+name = "natural-earth-50m"
+description = "Natural Earth's 1:50m land, coasts and country borders as compact GeoJSON, for globe-scale maps"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish = true
+license = "CC0-1.0"
+repository = "https://github.com/luofang34/Eclipse"
+keywords = ["natural-earth", "geojson", "basemap", "coastline", "borders"]
+categories = ["science::geo"]
+include = ["src", "data", "tests", "natural_earth.py"]
+
+[dev-dependencies]
+serde_json = "1"
+
+[lints]
+workspace = true

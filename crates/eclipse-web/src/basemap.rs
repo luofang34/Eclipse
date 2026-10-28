@@ -4,13 +4,7 @@
 use eclipse_core::geodesy::LatLon;
 use serde_json::Value;
 
-/// Land polygons, as GeoJSON.
-pub(crate) const LAND: &str = include_str!("../assets/land.geojson");
-/// The land's shores, without the edges that close its polygons along the antimeridian and
-/// across the south pole, as GeoJSON.
-pub(crate) const COAST: &str = include_str!("../assets/coast.geojson");
-/// Country borders, as GeoJSON.
-pub(crate) const BORDERS: &str = include_str!("../assets/borders.geojson");
+pub(crate) use natural_earth_50m::{BORDERS, COAST, LAND};
 
 /// The coasts and borders as lines, for the SVG export.
 pub(crate) fn lines() -> Result<eclipse_svg::Basemap, serde_json::Error> {
