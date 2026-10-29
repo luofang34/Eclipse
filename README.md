@@ -7,6 +7,8 @@ magnitude 0.5, the path of totality or annularity, the shadow and the night side
 moment, and the circumstances at any place clicked. A lunar eclipse shows the Moon's path
 through the Earth's shadow and where on Earth the eclipse is seen.
 
+The page is published at <https://luofang34.github.io/Eclipse/> from `main`.
+
 - `crates/eclipse-core`: the eclipses, from the Sun and Moon of
   [Navigate](https://github.com/luofang34/Navigate)'s `navigate-celestial`, with Besselian
   geometry, the Canon's lunar radii and Danjon's shadow enlargement.
