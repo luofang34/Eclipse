@@ -52,6 +52,8 @@ pub(crate) struct EclipseApp {
     restored_pose: Option<GlobePose>,
     /// The view from the ground, while the eye stands there.
     sky: Option<SkyView>,
+    /// Whether the page is a frame in another, without its side panel.
+    embed: bool,
     /// The flight down the page's link asks for, until it leaves or the viewer steps in.
     opening: Option<OpeningFlight>,
     /// The search for eclipses seen from a place.
@@ -96,6 +98,7 @@ impl EclipseApp {
             look: None,
             restored_pose: None,
             sky: None,
+            embed: link.embed,
             opening: None,
             finder: None,
             place_text: String::new(),
@@ -186,6 +189,7 @@ impl EclipseApp {
                 .as_ref()
                 .map(|selected| CalendarTime::from_jd(selected.greatest_tt()).iso_date()),
             stand,
+            embed: self.embed,
         });
     }
 
@@ -455,12 +459,14 @@ impl eframe::App for EclipseApp {
             finder.step();
             ui.ctx().request_repaint();
         }
-        egui::Panel::left("panel")
-            .resizable(false)
-            .exact_size(340.0)
-            .show(ui, |ui| {
-                egui::ScrollArea::vertical().show(ui, |ui| self.side_panel(ui));
-            });
+        if !self.embed {
+            egui::Panel::left("panel")
+                .resizable(false)
+                .exact_size(340.0)
+                .show(ui, |ui| {
+                    egui::ScrollArea::vertical().show(ui, |ui| self.side_panel(ui));
+                });
+        }
         egui::Panel::bottom("time").show(ui, |ui| {
             ui.add_space(4.0);
             self.time_bar(ui);
