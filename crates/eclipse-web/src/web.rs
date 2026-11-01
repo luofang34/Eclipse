@@ -2,6 +2,8 @@
 
 use wasm_bindgen::JsCast;
 
+use crate::link::PageLink;
+
 mod runtime;
 
 /// The canvas `index.html` provides.
@@ -65,24 +67,19 @@ pub(crate) fn today_jd() -> f64 {
     2_440_587.5 + seconds / eclipse_core::time::SECONDS_PER_DAY
 }
 
-/// The `date` the page's query names, as `YYYY-MM-DD`, or `-YYYY-MM-DD` before year 0.
-pub(crate) fn query_date() -> Option<String> {
-    let search = web_sys::window()?.location().search().ok()?;
-    search
-        .trim_start_matches('?')
-        .split('&')
-        .find_map(|pair| pair.strip_prefix("date="))
-        .filter(|date| date.trim_start_matches('-').len() == 10)
-        .map(str::to_owned)
+/// What the page's query asks for.
+pub(crate) fn page_link() -> PageLink {
+    let search = web_sys::window().and_then(|window| window.location().search().ok());
+    PageLink::parse(search.as_deref().unwrap_or_default())
 }
 
-/// Puts `date` in the page's address, so the view can be shared.
-pub(crate) fn show_date(date: &str) {
+/// Puts `link` in the page's address, so the view can be shared.
+pub(crate) fn show_link(link: &PageLink) {
     let Some(history) = web_sys::window().and_then(|window| window.history().ok()) else {
         return;
     };
-    let url = format!("?date={date}");
-    if let Err(error) = history.replace_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&url))
+    if let Err(error) =
+        history.replace_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&link.query()))
     {
         tracing::warn!(?error, "address not updated");
     }

@@ -118,6 +118,7 @@ impl EclipseApp {
             map.set_field_of_view(GLOBE_FIELD_OF_VIEW);
         }
         self.look = self.selected.as_ref().map(|s| s.focus());
+        self.show_address(false);
     }
 }
 

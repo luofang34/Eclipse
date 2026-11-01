@@ -10,6 +10,7 @@ use crate::{
     figure,
     finder::Finder,
     globe,
+    link::{OpeningFlight, PageLink},
     map::{Gesture, MapError, MapView},
     panel::{self, Action},
     selection::{Local, Selected},
@@ -51,6 +52,8 @@ pub(crate) struct EclipseApp {
     restored_pose: Option<GlobePose>,
     /// The view from the ground, while the eye stands there.
     sky: Option<SkyView>,
+    /// The flight down the page's link asks for, until it leaves or the viewer steps in.
+    opening: Option<OpeningFlight>,
     /// The search for eclipses seen from a place.
     finder: Option<Finder>,
     /// The place typed in.
@@ -59,7 +62,7 @@ pub(crate) struct EclipseApp {
 
 impl EclipseApp {
     /// The App on the page's GPU, showing the eclipse the page's `?date=` names, else the
-    /// year's next one.
+    /// year's next one. A link with `&stand=greatest` then flies down to the eclipse it named.
     pub(crate) fn new(
         cc: &eframe::CreationContext<'_>,
     ) -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
@@ -69,7 +72,8 @@ impl EclipseApp {
             .ok_or("the page has no wgpu renderer")?;
         cc.egui_ctx.set_visuals(egui::Visuals::light());
         let today = web::today_jd();
-        let wanted = web::query_date();
+        let link = web::page_link();
+        let wanted = link.date;
         let year = wanted
             .as_deref()
             .and_then(|date| {
@@ -92,6 +96,7 @@ impl EclipseApp {
             look: None,
             restored_pose: None,
             sky: None,
+            opening: None,
             finder: None,
             place_text: String::new(),
         };
@@ -102,14 +107,20 @@ impl EclipseApp {
         if wanted.is_none() && upcoming(&app.list).is_none() && year < *panel::YEARS.end() {
             app.load_year(year + 1);
         }
-        let index = app
+        let named = app
             .list
             .iter()
-            .position(|e| Some(CalendarTime::from_jd(e.greatest_tt()).iso_date()) == wanted)
+            .position(|e| Some(CalendarTime::from_jd(e.greatest_tt()).iso_date()) == wanted);
+        let index = named
             .or_else(|| upcoming(&app.list))
             .or(if app.list.is_empty() { None } else { Some(0) });
         if let Some(index) = index {
             app.select(index);
+        }
+        // A link flies only to the eclipse it names, not to one standing in for a wrong date.
+        if link.stand && named.is_some() {
+            app.opening = Some(OpeningFlight::default());
+            app.show_address(true);
         }
         Ok(app)
     }
@@ -152,8 +163,8 @@ impl EclipseApp {
                 tracing::info!(ms = started.elapsed().as_millis(), "eclipse map computed");
                 self.now_tt = selected.greatest_tt();
                 self.look = Some(selected.focus());
-                web::show_date(&CalendarTime::from_jd(selected.greatest_tt()).iso_date());
                 self.selected = Some(selected);
+                self.show_address(false);
                 self.index = Some(index);
                 self.local = None;
                 self.playing = false;
@@ -164,6 +175,18 @@ impl EclipseApp {
                 self.error = Some(error.to_string());
             }
         }
+    }
+
+    /// Puts the eclipse on show in the page's address, and whether the eye stands at its
+    /// typical place.
+    fn show_address(&self, stand: bool) {
+        web::show_link(&PageLink {
+            date: self
+                .selected
+                .as_ref()
+                .map(|selected| CalendarTime::from_jd(selected.greatest_tt()).iso_date()),
+            stand,
+        });
     }
 
     fn side_panel(&mut self, ui: &mut egui::Ui) {
@@ -321,10 +344,12 @@ impl EclipseApp {
         let response = ui.allocate_rect(rect, Sense::click_and_drag());
         let moved = gestures(ui, &response, map, rect);
         let mut waiting = false;
+        let mut drawn = false;
         match map.frame() {
             Ok(Some(texture)) => {
                 let uv = egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0));
                 ui.painter().image(texture, rect, uv, Color32::WHITE);
+                drawn = true;
             }
             Ok(None) => waiting = true,
             Err(error) => tracing::error!(%error, "globe frame"),
@@ -342,18 +367,24 @@ impl EclipseApp {
                 }
             }
         }
+        if moved || waiting || map.needs_redraw() {
+            ui.ctx().request_repaint();
+        }
+        self.lunar_inset(&painter, rect);
+        self.opening_flight(ui, drawn);
+    }
+
+    /// The lunar figure in the corner of the globe's `rect`, while a lunar eclipse is on show.
+    fn lunar_inset(&self, painter: &egui::Painter, rect: egui::Rect) {
         if let Some(Selected::Lunar { eclipse, .. }) = &self.selected {
             let side = (0.36 * rect.width().min(rect.height())).clamp(180.0, 320.0);
             let inset = egui::Rect::from_min_size(
                 rect.min + egui::vec2(12.0, 12.0),
                 egui::vec2(side, side),
             );
-            if let Err(error) = figure::draw(&painter, inset, eclipse, self.now_tt) {
+            if let Err(error) = figure::draw(painter, inset, eclipse, self.now_tt) {
                 tracing::error!(%error, "lunar figure");
             }
-        }
-        if moved || waiting || map.needs_redraw() {
-            ui.ctx().request_repaint();
         }
     }
 }
