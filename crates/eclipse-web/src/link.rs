@@ -5,6 +5,8 @@ mod tests;
 
 /// The query value of a link that flies down to the typical place for the eclipse.
 const STAND_GREATEST: &str = "greatest";
+/// The query part of a page framed in another.
+const EMBED: &str = "embed=1";
 /// How long a link shows the whole eclipse before flying down, seconds.
 const OVERVIEW_S: f64 = 2.0;
 
@@ -15,6 +17,8 @@ pub(crate) struct PageLink {
     pub(crate) date: Option<String>,
     /// Whether the eye stands at greatest eclipse, or under the Moon of a lunar one.
     pub(crate) stand: bool,
+    /// Whether the page is a frame in another, showing the globe and the time bar alone.
+    pub(crate) embed: bool,
 }
 
 impl PageLink {
@@ -27,6 +31,7 @@ impl PageLink {
                 .filter(|date| date.trim_start_matches('-').len() == 10)
                 .map(str::to_owned),
             stand: pairs().any(|pair| pair.strip_prefix("stand=") == Some(STAND_GREATEST)),
+            embed: pairs().any(|pair| pair == EMBED),
         }
     }
 
@@ -34,7 +39,8 @@ impl PageLink {
     pub(crate) fn query(&self) -> String {
         let date = self.date.as_ref().map(|date| format!("date={date}"));
         let stand = self.stand.then(|| format!("stand={STAND_GREATEST}"));
-        let parts: Vec<String> = date.into_iter().chain(stand).collect();
+        let embed = self.embed.then(|| EMBED.to_owned());
+        let parts: Vec<String> = date.into_iter().chain(stand).chain(embed).collect();
         if parts.is_empty() {
             String::new()
         } else {

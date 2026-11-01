@@ -39,10 +39,12 @@ fn a_link_survives_writing_it_out_and_reading_it_back() {
         PageLink {
             date: Some("2027-02-06".to_owned()),
             stand: false,
+            embed: false,
         },
         PageLink {
             date: Some("2027-02-06".to_owned()),
             stand: true,
+            embed: true,
         },
     ] {
         assert_eq!(PageLink::parse(&link.query()), link);
@@ -55,4 +57,11 @@ fn the_overview_runs_from_the_first_frame_asked_about() {
     assert_eq!(flight.remaining(100.0), Some(OVERVIEW_S));
     assert_eq!(flight.remaining(100.5), Some(OVERVIEW_S - 0.5));
     assert_eq!(flight.remaining(100.0 + OVERVIEW_S), None);
+}
+
+#[test]
+fn only_embed_1_frames_the_page() {
+    assert!(PageLink::parse("?date=2027-02-06&embed=1").embed);
+    assert!(!PageLink::parse("?date=2027-02-06&embed=0").embed);
+    assert!(!PageLink::parse("?date=2027-02-06").embed);
 }
