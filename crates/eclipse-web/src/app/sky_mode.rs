@@ -4,7 +4,7 @@
 use eframe::egui::{self, Color32, RichText};
 
 use super::EclipseApp;
-use crate::{map::GLOBE_FIELD_OF_VIEW, panel, sky, sky::Body};
+use crate::{eye, map::GLOBE_FIELD_OF_VIEW, panel, sky, sky::Body};
 
 /// The narrowest and widest field of view the viewer can zoom to, degrees.
 const FIELD_OF_VIEW: std::ops::RangeInclusive<f64> = 0.5..=100.0;
@@ -44,11 +44,9 @@ impl EclipseApp {
             tracing::error!(%error, "standing pose");
         }
         let mut frame = sky::with_eclipse(frame, view.site, selected, self.now_tt);
-        // The renderer dims the whole day side by the share the eye sees, so the globe the
-        // camera flies down over keeps the full Sun until the eye stands on the ground.
-        if view.flying() {
-            frame.sun_visible = None;
-        }
+        frame.sun_visible = frame
+            .sun_visible
+            .map(|share| eye::share_on_the_way(share, view.way_down(now_s)));
         map.set_sky(Some(frame.clone()));
         view.shown = Some(crate::map::SkyFrame {
             stars: None,

@@ -177,3 +177,14 @@ fn sokoly_demos_sunshine_and_moonlight() {
         );
     }
 }
+
+#[test]
+fn the_sky_darkens_on_the_way_down_and_not_at_the_landing() {
+    let share = 0.1;
+    assert_eq!(super::share_on_the_way(share, 0.0), 1.0);
+    assert!((super::share_on_the_way(share, 1.0) - share).abs() < 1e-6);
+    let halfway = super::share_on_the_way(share, super::smooth(0.5));
+    assert!(share < halfway && halfway < 1.0, "{halfway}");
+    let later = super::share_on_the_way(share, super::smooth(0.75));
+    assert!(later < halfway, "{later} after {halfway}");
+}

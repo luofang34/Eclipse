@@ -93,6 +93,14 @@ impl SkyView {
         self.flight.is_some()
     }
 
+    /// How far down the camera has come at `now_s`, eased, from 0 at the globe to 1 standing.
+    pub(crate) fn way_down(&self, now_s: f64) -> f64 {
+        self.flight.as_ref().map_or(1.0, |flight| {
+            let started = flight.started_s.unwrap_or(now_s);
+            eye::smooth(((now_s - started) / FLIGHT_S).clamp(0.0, 1.0))
+        })
+    }
+
     /// Turns the view to the body it follows at `jd_tt`.
     pub(crate) fn track(&mut self, sky: &SkyFrame) {
         let toward = match self.follow {
