@@ -4,11 +4,14 @@
 use eclipse_core::geodesy::LatLon;
 use eframe::egui::{Color32, Mesh, Painter, Pos2, Shape, Stroke, epaint::Vertex};
 
-use crate::map::Projector;
+use crate::{dash, map::Projector};
 
 /// Two consecutive points further apart than this on screen are not joined: the curve
 /// passed behind the globe or off the view between them.
 const MAX_SCREEN_STEP: f32 = 120.0;
+
+/// The distance between dashes when the middle of the view is off the globe, km.
+const WHOLE_GLOBE_DASH_KM: f64 = 256.0;
 
 /// How a curve is stroked.
 #[derive(Clone, Copy, Debug)]
@@ -19,11 +22,27 @@ pub(crate) struct Line {
 
 /// Draws each polyline of `curves`.
 pub(crate) fn curves(painter: &Painter, projector: &Projector, curves: &[Vec<LatLon>], line: Line) {
+    let period = projector
+        .points_per_km()
+        .map_or(WHOLE_GLOBE_DASH_KM, |scale| {
+            dash::period_km(f64::from(scale))
+        });
     for curve in curves {
-        for run in runs(projector, curve) {
-            if line.dashed {
-                painter.extend(Shape::dashed_line(&run, line.stroke, 6.0, 5.0));
-            } else {
+        if line.dashed {
+            let drawn = |a: LatLon, b: LatLon| {
+                let ends = (
+                    projector.project(a.lat, a.lon),
+                    projector.project(b.lat, b.lon),
+                );
+                matches!(ends, (Some(p), Some(q)) if p.distance(q) < MAX_SCREEN_STEP)
+            };
+            for piece in dash::dashes(curve, period, drawn) {
+                for run in runs(projector, &piece) {
+                    painter.add(Shape::line(run, line.stroke));
+                }
+            }
+        } else {
+            for run in runs(projector, curve) {
                 painter.add(Shape::line(run, line.stroke));
             }
         }
