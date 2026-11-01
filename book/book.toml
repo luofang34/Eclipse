@@ -1,0 +1,15 @@
+[book]
+title = "Eclipse Maps"
+description = "How to read the eclipse maps, and how they are computed"
+language = "en"
+src = "src"
+
+[build]
+build-dir = "build"
+create-missing = false
+
+[output.html]
+git-repository-url = "https://github.com/luofang34/Eclipse"
+edit-url-template = "https://github.com/luofang34/Eclipse/edit/main/book/{path}"
+additional-css = ["theme-extra/eclipse.css"]
+additional-js = ["theme-extra/eclipse.js"]

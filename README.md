@@ -7,7 +7,8 @@ magnitude 0.5, the path of totality or annularity, the shadow and the night side
 moment, and the circumstances at any place clicked. A lunar eclipse shows the Moon's path
 through the Earth's shadow and where on Earth the eclipse is seen.
 
-The page is published at <https://luofang34.github.io/Eclipse/> from `main`.
+The page is published at <https://luofang34.github.io/Eclipse/> from `main`, with a book on how
+to read the maps and how they are computed at <https://luofang34.github.io/Eclipse/book/>.
 
 - `crates/eclipse-core`: the eclipses, from the Sun and Moon of
   [Navigate](https://github.com/luofang34/Navigate)'s `navigate-celestial`, with Besselian
@@ -27,7 +28,8 @@ The page needs the `wasm32-unknown-unknown` target, [trunk](https://trunkrs.dev)
 
 `?date=YYYY-MM-DD` opens the eclipse of that date; `&stand=greatest` then shows the whole
 eclipse for two seconds and flies down to stand at greatest eclipse, or under the Moon of a
-lunar one, unless a press or scroll on the page comes first. **Save SVG** in the time bar saves the
+lunar one, unless a press or scroll on the page comes first; `&embed=1` leaves out the side
+panel, for a frame in another page. **Save SVG** in the time bar saves the
 eclipse on show as an animated SVG.
 
 Under **A place**, type a latitude and longitude or pick a city to see the eclipse from
@@ -36,6 +38,11 @@ eclipse**, **Stand under the Moon** and **See the sky from this place** fly down
 the ground and watch the Sun or the Moon, with Navigate's Sun, its Moon as seen from that
 place, and its stars, drawn by the MapLibre fork's sky. Drag to look around and scroll to
 change the field of view.
+
+The book's sources are in `book/src`; its examples are the page in a frame, so they need the
+two built together, which also takes [mdBook](https://rust-lang.github.io/mdBook/):
+
+    scripts/build-site.sh  # into crates/eclipse-web/dist, with the book in its book/
 
 ## Checks
 
