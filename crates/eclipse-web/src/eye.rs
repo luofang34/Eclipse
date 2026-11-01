@@ -185,6 +185,13 @@ fn slerp_vector(a: Vector3<f64>, b: Vector3<f64>, t: f64) -> Vector3<f64> {
     (a * ((1.0 - t) * angle).sin() + b * (t * angle).sin()) / angle.sin()
 }
 
+/// The share of the Sun the renderer lights by, `way_down` a flight from the globe to an eye
+/// that sees `share`. The renderer dims the whole day side by it, so it falls as the camera
+/// comes down rather than leaving the globe dark or the sky bright until the landing.
+pub(crate) fn share_on_the_way(share: f32, way_down: f64) -> f32 {
+    1.0 - (1.0 - share) * way_down as f32
+}
+
 /// Eases in and out.
 pub(crate) fn smooth(t: f64) -> f64 {
     t * t * (3.0 - 2.0 * t)
