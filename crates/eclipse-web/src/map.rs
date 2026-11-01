@@ -238,6 +238,20 @@ impl Projector {
         Some(at(seen)?.distance(middle))
     }
 
+    /// Screen points to a kilometre of ground at the middle of the view, or `None` when the
+    /// middle is off the globe.
+    pub fn points_per_km(&self) -> Option<f32> {
+        // Short enough to stay in view however close the camera comes.
+        const STEP_DEGREES: f64 = 0.05;
+        let (lat, lon) = self.unproject(self.rect.center())?;
+        let from = eclipse_core::geodesy::LatLon { lat, lon };
+        let beside = crate::overlay::destination(from, 90.0, STEP_DEGREES);
+        let on_screen = self
+            .project(from.lat, from.lon)?
+            .distance(self.project(beside.lat, beside.lon)?);
+        Some(on_screen / eclipse_core::geodesy::distance_km(from, beside) as f32)
+    }
+
     /// The geographic position under a screen point, or `None` off the globe.
     pub fn unproject(&self, at: Pos2) -> Option<(f64, f64)> {
         let pixel = cgmath::Point2::new(
