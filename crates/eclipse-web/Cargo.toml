@@ -17,7 +17,7 @@ thiserror.workspace = true
 tracing.workspace = true
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
-maplibre = { git = "https://github.com/luofang34/maplibre-rs-experimental", rev = "55eda312d1bab876eae15a6a612f63cca1c69856", default-features = false, features = ["headless", "raster"] }
+maplibre = { git = "https://github.com/luofang34/maplibre-rs-experimental", rev = "7c8fc5454e5117037e0ba9a416c1c6ea163a1b0e", default-features = false, features = ["experimental", "headless", "raster"] }
 wgpu = "30.0.1"
 eframe = { version = "0.36.2", default-features = false, features = ["wgpu", "default_fonts"] }
 egui-wgpu = "0.36.2"
