@@ -25,7 +25,9 @@ The page needs the `wasm32-unknown-unknown` target, [trunk](https://trunkrs.dev)
     cd crates/eclipse-web
     trunk serve            # or: trunk build --release
 
-`?date=YYYY-MM-DD` opens the eclipse of that date. **Save SVG** in the time bar saves the
+`?date=YYYY-MM-DD` opens the eclipse of that date; `&stand=greatest` then shows the whole
+eclipse for two seconds and flies down to stand at greatest eclipse, or under the Moon of a
+lunar one, unless a press or scroll on the page comes first. **Save SVG** in the time bar saves the
 eclipse on show as an animated SVG.
 
 Under **A place**, type a latitude and longitude or pick a city to see the eclipse from

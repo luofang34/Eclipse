@@ -69,29 +69,20 @@ impl EclipseApp {
         let Some(selected) = &self.selected else {
             return;
         };
-        let typical = match selected {
-            Selected::Solar { eclipse, .. } => Some((
-                "Stand at greatest eclipse",
-                eclipse.greatest,
-                eclipse.greatest_tt,
-            )),
-            Selected::Lunar { eclipse, .. } => eclipse
-                .sublunar(eclipse.greatest_tt)
-                .ok()
-                .map(|below| ("Stand under the Moon", below, eclipse.greatest_tt)),
-        };
+        let typical =
+            typical_stand(selected).map(|(label, site, at_tt)| (label, site, at_tt, true));
         let here = self.local.as_ref().map(|local| {
             let best = match local {
                 Local::Solar(_, Some(seen)) => seen.max.tt,
                 _ => selected.greatest_tt(),
             };
-            ("See the sky from this place", local.at(), best)
+            ("See the sky from this place", local.at(), best, false)
         });
         let mut fly = None;
         ui.horizontal_wrapped(|ui| {
-            for (label, site, at_tt) in typical.into_iter().chain(here) {
+            for (label, site, at_tt, is_typical) in typical.into_iter().chain(here) {
                 if ui.button(label).clicked() {
-                    fly = Some((site, at_tt));
+                    fly = Some((site, at_tt, is_typical));
                 }
             }
             if let Some(at) = self.local.as_ref().map(Local::at)
@@ -102,8 +93,34 @@ impl EclipseApp {
                 self.finder = Some(Finder::new(at, self.year));
             }
         });
-        if let Some((site, at_tt)) = fly {
+        if let Some((site, at_tt, is_typical)) = fly {
             self.fly_to(site, at_tt);
+            self.show_address(is_typical);
+        }
+    }
+
+    /// Waits out the overview a link's flight opens with, then flies; `drawn` tells whether
+    /// the globe is on screen. Any press or scroll hands the page to the viewer instead.
+    pub(super) fn opening_flight(&mut self, ui: &egui::Ui, drawn: bool) {
+        let Some(opening) = &mut self.opening else {
+            return;
+        };
+        let (now_s, stepped_in) = ui.input(|input| {
+            let scrolled = input.smooth_scroll_delta != egui::Vec2::ZERO;
+            (input.time, input.pointer.any_pressed() || scrolled)
+        });
+        if stepped_in {
+            self.opening = None;
+            self.show_address(false);
+        } else if drawn {
+            // An idle globe draws no frames, and it is frames that run the overview out.
+            ui.ctx().request_repaint();
+            if opening.remaining(now_s).is_none() {
+                self.opening = None;
+                if let Some((_, site, at_tt)) = self.selected.as_ref().and_then(typical_stand) {
+                    self.fly_to(site, at_tt);
+                }
+            }
         }
     }
 
@@ -171,6 +188,21 @@ impl EclipseApp {
         self.look = None;
         let from = self.map.as_ref().and_then(|map| map.pose());
         self.sky = Some(SkyView::new(site, body, from));
+    }
+}
+
+/// The button for the place to stand for `selected`, that place, and the moment to be there.
+fn typical_stand(selected: &Selected) -> Option<(&'static str, LatLon, f64)> {
+    match selected {
+        Selected::Solar { eclipse, .. } => Some((
+            "Stand at greatest eclipse",
+            eclipse.greatest,
+            eclipse.greatest_tt,
+        )),
+        Selected::Lunar { eclipse, .. } => eclipse
+            .sublunar(eclipse.greatest_tt)
+            .ok()
+            .map(|below| ("Stand under the Moon", below, eclipse.greatest_tt)),
     }
 }
 
